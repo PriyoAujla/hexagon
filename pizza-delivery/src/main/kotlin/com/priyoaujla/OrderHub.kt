@@ -1,9 +1,8 @@
 package com.priyoaujla
 
-import com.priyoaujla.Menu.Item
 import java.util.*
 
-class PizzaHub(
+class OrderHub(
     private val customer: UserDetails,
     private val theMenu: TheMenu,
     private val orders: Orders,
@@ -14,20 +13,20 @@ class PizzaHub(
         return theMenu()
     }
 
-    fun order(items: List<Menu.MenuItem>): Bill {
-        val theBill = items.fold(Bill(Money(0.0), Order())) { bill, menuItem ->
-            bill.copy(
-                amount = bill.amount + menuItem.price,
-                order = bill.order.copy(items = bill.order.items + menuItem)
+    fun order(items: List<Menu.MenuItem>): Order {
+        val order = items.fold(Order(total = Money(0.0), status = Order.Status.New)) { order, menuItem ->
+            order.copy(
+                total = order.total + menuItem.price,
+                items = order.items + menuItem
             )
         }
-        orders.add(theBill.order)
-        return theBill
+        orders.upsert(order)
+        return order
     }
 
-    fun payment(paymentType: PaymentType, bill: Bill): PaymentInstructions {
-        return  when(paymentType) {
-            PaymentType.Paypal -> PaymentInstructions.GotoPaypal(bill)
+    fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
+        return when(paymentType) {
+            PaymentType.Paypal -> PaymentInstructions.GotoPaypal(order)
             PaymentType.DirectDebit -> TODO()
             PaymentType.CreditCard -> TODO()
         }
@@ -37,39 +36,21 @@ class PizzaHub(
         val order = orders.get(orderId)
         order?.let {
             startBaking(order)
-        } ?: TODO()
+        } ?: error("")
     }
 
 }
 
 interface Paypal {
-
     fun pay(orderId: OrderId, total: Money): PaymentId
-}
-
-interface MenuStorage {
-    fun get(): Menu
-
-    fun add(item: Item, price: Money)
-}
-
-class MenuHub(
-    private val menuStorage: MenuStorage
-) {
-
-    fun fetch(): Menu = menuStorage.get()
-
-    fun createItem(item: Item, price: Money) {
-        menuStorage.add(item, price)
-    }
 }
 
 typealias TheMenu = () -> Menu
 typealias StartBaking = (Order) -> Unit
 
 sealed class PaymentInstructions {
-    abstract val bill: Bill
-    data class GotoPaypal(override val bill: Bill) : PaymentInstructions()
+    abstract val order: Order
+    data class GotoPaypal(override val order: Order) : PaymentInstructions()
 }
 
 data class PaymentId(val value: String)
@@ -77,8 +58,6 @@ data class PaymentId(val value: String)
 enum class PaymentType {
     DirectDebit, CreditCard, Paypal
 }
-
-data class Bill(val amount: Money, val order: Order)
 
 data class UserDetails(
     val userId: UserId,
@@ -98,7 +77,16 @@ data class GivenName(val value: String)
 data class FamilyName(val value: String)
 data class Address(val value: String)
 
-data class Order(val id: OrderId = OrderId.mint(), val items: List<Menu.MenuItem> = emptyList())
+data class Order(
+    val id: OrderId = OrderId.mint(),
+    val items: List<Menu.MenuItem> = emptyList(),
+    val total: Money,
+    val status: Status
+) {
+    enum class Status {
+        New, Paid, Cooked, Delivered
+    }
+}
 data class OrderId(val uuid: UUID) {
     companion object {
         fun mint(): OrderId {
@@ -107,17 +95,16 @@ data class OrderId(val uuid: UUID) {
     }
 }
 
-
 interface OrderStorage {
 
-    fun add(order: Order)
+    fun upsert(order: Order)
     fun get(orderId: OrderId): Order?
 }
 
 class Orders(private val orderStorage: OrderStorage) {
 
-    fun add(order: Order) {
-        orderStorage.add(order)
+    fun upsert(order: Order) {
+        orderStorage.upsert(order)
     }
 
     fun get(orderId: OrderId): Order? = orderStorage.get(orderId)
@@ -129,10 +116,11 @@ data class Money(val value: Double) {
         return Money(value + increment.value)
     }
 
-    operator fun minus(increment: Money): Money {
-        return Money(value - increment.value)
+    operator fun minus(decrement: Money): Money {
+        return Money(value - decrement.value)
     }
 }
+
 data class Menu(val items: Set<MenuItem>) {
     data class MenuItem(val item: Item, val price: Money)
     data class Item(val name: Name, val ingredients: List<Ingredient>)

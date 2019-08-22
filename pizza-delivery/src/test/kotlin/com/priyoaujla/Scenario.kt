@@ -4,7 +4,7 @@ import com.priyoaujla.TestData.Ingredients.basil
 import com.priyoaujla.TestData.Ingredients.mozzarella
 import com.priyoaujla.TestData.Ingredients.pizzaDough
 import com.priyoaujla.TestData.Ingredients.tomatoSauce
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import java.time.Instant
 import java.util.*
 
@@ -17,27 +17,48 @@ class Scenario {
             }
         }
 
-    private val pizzaHub = PizzaHub(
+    private val orders = Orders(InMemoryOrderStorage())
+    private val orderHub = OrderHub(
         customer = connorTheCustomer,
         theMenu = { menuHub.fetch() },
-        orders = Orders(InMemoryOrderStorage()),
+        orders = orders,
         startBaking = {
-            kitchenHub.queue(it)
+            kitchenHub.createTicket(it)
         }
     )
 
-
     private val kitchenHub = KitchenHub(
         chef = cathyTheChef,
-        ticketStorage = InMemoryTicketStorage()
+        ticketStorage = InMemoryTicketStorage(),
+        orders = orders,
+        startDelivery = {
+            deliveryHub.createDeliveryNote(it)
+        }
     )
 
+    private val deliveryHub = DeliveryHub(
+        courier = carmenTheCourier,
+        orders = orders,
+        deliveries = Deliveries(InMemoryDeliveryStorage()),
+        pickup = { error("") }
+    )
 
     private val paypal = FakePaypal()
 
-    fun newCustomer(): CustomerRole = CustomerRole(pizzaHub, paypal)
+    fun newCustomer(): CustomerRole = CustomerRole(orderHub, paypal)
 
     fun newChef(): ChefRole = ChefRole(kitchenHub)
+
+    fun newCourier(): CourierRole = CourierRole(deliveryHub)
+}
+
+class CourierRole(
+    private val deliveryHub: DeliveryHub
+){
+    fun theNextOrderIs(order: Order) {
+        val nextOrderToDeliver = deliveryHub.nextDelivery()
+        assertEquals(nextOrderToDeliver, Delivery.from(order))
+    }
 }
 
 class ChefRole(
@@ -45,40 +66,39 @@ class ChefRole(
 ) {
 
     fun hasTickets(vararg tickets: Ticket) {
-        Assert.assertEquals(tickets.asList(), kitchenHub.tickets().toList())
+        assertEquals(tickets.asList(), kitchenHub.tickets().toList())
     }
 
     fun canPickupNextTicket(ticket: Ticket) {
-        Assert.assertEquals(ticket, kitchenHub.nextTicket())
+        assertEquals(ticket, kitchenHub.nextTicket())
     }
 
     fun canFinishCooking(ticket: Ticket) {
         kitchenHub.ticketComplete(ticket)
-        Assert.assertEquals(Instant.EPOCH, kitchenHub.ticketFor(ticket.orderId)?.completedAt)
+        assertEquals(Instant.EPOCH, kitchenHub.ticketFor(ticket.orderId)?.completedAt)
     }
-
 }
 
 class CustomerRole(
-    private val pizzaHub: PizzaHub,
+    private val orderHub: OrderHub,
     private val paypal: Paypal
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
-        val menu = pizzaHub.menu()
-        Assert.assertEquals(menu.items, menuItems)
+        val menu = orderHub.menu()
+        assertEquals(menu.items, menuItems)
     }
 
-    fun canOrder(items: List<Menu.MenuItem>, expectedTotal: Money): Bill {
-        val bill = pizzaHub.order(items)
-        Assert.assertEquals(bill.amount, expectedTotal)
-        return bill
+    fun canOrder(items: List<Menu.MenuItem>, expectedTotal: Money): Order {
+        val order = orderHub.order(items)
+        assertEquals(order.total, expectedTotal)
+        return order
     }
 
-    fun canPay(bill: Bill, paymentType: PaymentType) {
-        val paymentInstructions = pizzaHub.payment(paymentType, bill)
-        val paymentId = paypal.pay(paymentInstructions.bill.order.id, paymentInstructions.bill.amount)
-        pizzaHub.paymentConfirmation(paymentInstructions.bill.order.id, paymentId)
+    fun canPay(order: Order, paymentType: PaymentType) {
+        val paymentInstructions = orderHub.payment(paymentType, order)
+        val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
+        orderHub.paymentConfirmation(paymentInstructions.order.id, paymentId)
     }
 }
 
@@ -147,12 +167,11 @@ class InMemoryTicketStorage: TicketStorage {
 class InMemoryOrderStorage: OrderStorage {
     private val storage = mutableSetOf<Order>()
 
-    override fun add(order: Order) {
+    override fun upsert(order: Order) {
         storage.add(order)
     }
 
     override fun get(orderId: OrderId): Order? = storage.find { it.id == orderId }
-
 }
 
 class InMemoryMenuStorage : MenuStorage {
@@ -167,6 +186,16 @@ class InMemoryMenuStorage : MenuStorage {
     }
 }
 
+class InMemoryDeliveryStorage: DeliveryStorage {
+    private val storage = mutableSetOf<Delivery>()
+
+    override fun upsert(delivery: Delivery) {
+        storage.add(delivery)
+    }
+
+    override fun take(): Delivery = storage.first()
+}
+
 val cathyTheChef = UserDetails(
     UserId.mint(),
     GivenName("Cathy"),
@@ -176,6 +205,12 @@ val cathyTheChef = UserDetails(
 val connorTheCustomer = UserDetails(
     UserId.mint(),
     GivenName("Connor"),
+    FamilyName("UserDetails"),
+    Address("Some address")
+)
+val carmenTheCourier = UserDetails(
+    UserId.mint(),
+    GivenName("Carmen"),
     FamilyName("UserDetails"),
     Address("Some address")
 )

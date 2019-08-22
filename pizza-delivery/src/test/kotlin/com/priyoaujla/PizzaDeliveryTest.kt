@@ -7,12 +7,12 @@ class PizzaDeliveryTest {
     private val scenario = Scenario()
 
     @Test
-    fun `a completed ticket will notify the delivery driver`() = HasFinishedCookingAnOrder(scenario).run {
-
+    fun `the courier is able to see the order once it has been cooked`() = HasFinishedCookingAnOrder(scenario).run {
+        courier.theNextOrderIs(order)
     }
 
     @Test
-    fun `the delivery driver can notify when the order has been delivered`() = HasFinishedCookingAnOrder(scenario).run {
+    fun `the courier can notify when the order has been delivered`() = HasFinishedCookingAnOrder(scenario).run {
 
     }
 
@@ -23,12 +23,12 @@ class HasFinishedCookingAnOrder(scenario: Scenario, items: List<Menu.MenuItem> =
     private val orderFixture = HasPaidForAnOrder(scenario, items)
 
     val customer get() = orderFixture.customer
-    val theBill get() = orderFixture.theBill
-    val paymentId get() = orderFixture.paymentId
+    val order get() = orderFixture.order
 
     val chef = scenario.newChef()
+    val courier = scenario.newCourier()
 
     init {
-        chef.canFinishCooking(Ticket.from(theBill.order))
+        chef.canFinishCooking(Ticket.from(order))
     }
 }
