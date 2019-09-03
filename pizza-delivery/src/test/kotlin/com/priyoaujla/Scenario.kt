@@ -55,7 +55,7 @@ class Scenario {
 class CourierRole(
     private val deliveryHub: DeliveryHub
 ){
-    fun theNextOrderIs(order: Order) {
+    fun theNextDeliveryIs(order: Order) {
         val nextOrderToDeliver = deliveryHub.nextDelivery()
         assertEquals(nextOrderToDeliver, Delivery.from(order))
     }

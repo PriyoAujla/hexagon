@@ -8,7 +8,7 @@ class PizzaDeliveryTest {
 
     @Test
     fun `the courier is able to see the order once it has been cooked`() = HasFinishedCookingAnOrder(scenario).run {
-        courier.theNextOrderIs(order)
+        courier.theNextDeliveryIs(order)
     }
 
     @Test
