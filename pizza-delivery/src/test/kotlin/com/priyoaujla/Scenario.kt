@@ -18,7 +18,7 @@ class Scenario {
         }
 
     private val orders = Orders(InMemoryOrderStorage())
-    private val orderHub = OrderHub(
+    private val orderHub = OrderingHub(
         customer = connorTheCustomer,
         theMenu = { menuHub.fetch() },
         orders = orders,
@@ -86,29 +86,29 @@ class ChefRole(
 }
 
 class CustomerRole(
-    private val orderHub: OrderHub,
+    private val orderingHub: OrderingHub,
     private val paypal: Paypal
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
-        val menu = orderHub.menu()
+        val menu = orderingHub.menu()
         assertEquals(menu.items, menuItems)
     }
 
     fun canOrder(items: List<Menu.MenuItem>, expectedTotal: Money): Order {
-        val order = orderHub.order(items)
+        val order = orderingHub.order(items)
         assertEquals(order.total, expectedTotal)
         return order
     }
 
     fun canPay(order: Order, paymentType: PaymentType) {
-        val paymentInstructions = orderHub.payment(paymentType, order)
+        val paymentInstructions = orderingHub.payment(paymentType, order)
         val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
-        orderHub.paymentConfirmation(paymentInstructions.order.id, paymentId)
+        orderingHub.paymentConfirmation(paymentInstructions.order.id, paymentId)
     }
 
     fun canSeeOrderStatus(orderId: OrderId, status: Order.Status){
-        assertEquals(status, orderHub.order(orderId)?.status)
+        assertEquals(status, orderingHub.order(orderId)?.status)
     }
 }
 

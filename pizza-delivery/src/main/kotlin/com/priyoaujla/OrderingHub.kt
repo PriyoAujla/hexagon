@@ -2,7 +2,7 @@ package com.priyoaujla
 
 import java.util.*
 
-class OrderHub(
+class OrderingHub(
     private val customer: UserDetails,
     private val theMenu: TheMenu,
     private val orders: Orders,
