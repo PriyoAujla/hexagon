@@ -55,9 +55,15 @@ class Scenario {
 class CourierRole(
     private val deliveryHub: DeliveryHub
 ){
-    fun theNextDeliveryIs(order: Order) {
+    fun theNextDeliveryIs(order: Order): Delivery {
         val nextOrderToDeliver = deliveryHub.nextDelivery()
-        assertEquals(nextOrderToDeliver, Delivery.from(order))
+        val delivery = Delivery.from(order)
+        assertEquals(nextOrderToDeliver, delivery)
+        return delivery
+    }
+
+    fun hasDelivered(delivery: Delivery) {
+        deliveryHub.delivered(delivery)
     }
 }
 
@@ -99,6 +105,10 @@ class CustomerRole(
         val paymentInstructions = orderHub.payment(paymentType, order)
         val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
         orderHub.paymentConfirmation(paymentInstructions.order.id, paymentId)
+    }
+
+    fun canSeeOrderStatus(orderId: OrderId, status: Order.Status){
+        assertEquals(status, orderHub.order(orderId)?.status)
     }
 }
 
@@ -168,6 +178,7 @@ class InMemoryOrderStorage: OrderStorage {
     private val storage = mutableSetOf<Order>()
 
     override fun upsert(order: Order) {
+        storage.removeIf { it.id == order.id}
         storage.add(order)
     }
 
@@ -214,3 +225,7 @@ val carmenTheCourier = UserDetails(
     FamilyName("UserDetails"),
     Address("Some address")
 )
+
+inline fun <T, R> T.runTest(block: T.() -> R) {
+    block()
+}

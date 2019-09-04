@@ -7,13 +7,15 @@ class PizzaDeliveryTest {
     private val scenario = Scenario()
 
     @Test
-    fun `the courier is able to see the order once it has been cooked`() = HasFinishedCookingAnOrder(scenario).run {
+    fun `the courier is able to see the order once it has been cooked`() = HasFinishedCookingAnOrder(scenario).runTest {
         courier.theNextDeliveryIs(order)
     }
 
     @Test
-    fun `the courier can notify when the order has been delivered`() = HasFinishedCookingAnOrder(scenario).run {
-
+    fun `the courier can notify when the order has been delivered`() = HasFinishedCookingAnOrder(scenario).runTest {
+        val delivery = courier.theNextDeliveryIs(order)
+        courier.hasDelivered(delivery)
+        customer.canSeeOrderStatus(delivery.orderId, Order.Status.Delivered)
     }
 
 }

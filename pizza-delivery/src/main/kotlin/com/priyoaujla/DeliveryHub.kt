@@ -15,6 +15,12 @@ class DeliveryHub(
 
     }
 
+    fun delivered(delivery: Delivery) {
+        orders.get(delivery.orderId)?.let {
+            orders.upsert(it.copy(status = Order.Status.Delivered))
+        }?: error("")
+    }
+
 }
 
 data class Delivery(val orderId: OrderId, val menuItem: List<Menu.MenuItem>, val total: Money) {

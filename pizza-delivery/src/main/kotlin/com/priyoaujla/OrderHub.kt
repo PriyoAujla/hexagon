@@ -24,6 +24,10 @@ class OrderHub(
         return order
     }
 
+    fun order(orderId: OrderId): Order? {
+        return orders.get(orderId)
+    }
+
     fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
         return when(paymentType) {
             PaymentType.Paypal -> PaymentInstructions.GotoPaypal(order)
@@ -35,6 +39,7 @@ class OrderHub(
     fun paymentConfirmation(orderId: OrderId, paymentId: PaymentId) {
         val order = orders.get(orderId)
         order?.let {
+            orders.upsert(it.copy(status = Order.Status.Paid))
             startBaking(order)
         } ?: error("")
     }
