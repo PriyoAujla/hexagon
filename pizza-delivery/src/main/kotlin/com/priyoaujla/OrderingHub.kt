@@ -24,7 +24,7 @@ class OrderingHub(
         return order
     }
 
-    fun order(orderId: OrderId): Order? {
+    fun retrieve(orderId: OrderId): Order? {
         return orders.get(orderId)
     }
 

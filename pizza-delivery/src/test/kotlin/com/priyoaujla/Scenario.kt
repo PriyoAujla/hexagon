@@ -108,7 +108,7 @@ class CustomerRole(
     }
 
     fun canSeeOrderStatus(orderId: OrderId, status: Order.Status){
-        assertEquals(status, orderingHub.order(orderId)?.status)
+        assertEquals(status, orderingHub.retrieve(orderId)?.status)
     }
 }
 
