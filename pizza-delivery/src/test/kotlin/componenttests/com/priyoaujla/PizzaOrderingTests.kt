@@ -1,6 +1,9 @@
-package com.priyoaujla
+package componenttests.com.priyoaujla
 
-import com.priyoaujla.TestData.minimalMenu
+import com.priyoaujla.Money
+import com.priyoaujla.Order
+import com.priyoaujla.PaymentType
+import componenttests.com.priyoaujla.TestData.minimalMenu
 import org.junit.Test
 
 class PizzaOrderingTests {

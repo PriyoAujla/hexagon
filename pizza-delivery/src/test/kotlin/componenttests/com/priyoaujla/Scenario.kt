@@ -1,11 +1,11 @@
-package com.priyoaujla
+package componenttests.com.priyoaujla
 
-import com.priyoaujla.TestData.Ingredients.basil
-import com.priyoaujla.TestData.Ingredients.mozzarella
-import com.priyoaujla.TestData.Ingredients.pizzaDough
-import com.priyoaujla.TestData.Ingredients.tomatoSauce
-import org.junit.Assert.assertEquals
-import java.time.Instant
+import com.priyoaujla.*
+import componenttests.com.priyoaujla.TestData.Ingredients.basil
+import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
+import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
+import componenttests.com.priyoaujla.TestData.Ingredients.tomatoSauce
+import org.junit.Assert.*
 import java.util.*
 
 class Scenario {
@@ -17,39 +17,50 @@ class Scenario {
             }
         }
 
-    private val orders = Orders(InMemoryOrderStorage())
+    private val orderStorage = InMemoryOrderStorage()
+
+    private val orders = Orders(orderStorage)
+
     private val orderHub = OrderingHub(
-        customer = connorTheCustomer,
-        theMenu = { menuHub.fetch() },
-        orders = orders,
-        startBaking = {
-            kitchenHub.createTicket(it)
-        }
-    )
+            customer = connorTheCustomer,
+            theMenu = { menuHub.fetch() },
+            orderStorage = orderStorage,
+            startBaking = {
+                kitchenHub.createTicket(it)
+            }
+        )
+
+    private val orderProgress = OrderProgress(orderStorage)
 
     private val kitchenHub = KitchenHub(
-        chef = cathyTheChef,
-        ticketStorage = InMemoryTicketStorage(),
-        orders = orders,
-        startDelivery = {
-            deliveryHub.createDeliveryNote(it)
-        }
-    )
+            chef = cathyTheChef,
+            ticketStorage = InMemoryTicketStorage(),
+            orders = orders,
+            cookingFinished = {
+                orderProgress.update(it.orderId, Order.Status.Cooked)
+                deliveryHub.newDelivery(it)
+            }
+        )
 
     private val deliveryHub = DeliveryHub(
         courier = carmenTheCourier,
         orders = orders,
-        deliveries = Deliveries(InMemoryDeliveryStorage()),
-        pickup = { error("") }
+        deliveryStorage = InMemoryDeliveryStorage(),
+        deliveryComplete = {
+            orderProgress.update(it, Order.Status.Delivered)
+        }
     )
 
     private val paypal = FakePaypal()
 
-    fun newCustomer(): CustomerRole = CustomerRole(orderHub, paypal)
+    fun newCustomer(): CustomerRole =
+        CustomerRole(orderHub, paypal)
 
-    fun newChef(): ChefRole = ChefRole(kitchenHub)
+    fun newChef(): ChefRole =
+        ChefRole(kitchenHub)
 
-    fun newCourier(): CourierRole = CourierRole(deliveryHub)
+    fun newCourier(): CourierRole =
+        CourierRole(deliveryHub)
 }
 
 class CourierRole(
@@ -57,13 +68,14 @@ class CourierRole(
 ){
     fun theNextDeliveryIs(order: Order): Delivery {
         val nextOrderToDeliver = deliveryHub.nextDelivery()
-        val delivery = Delivery.from(order)
-        assertEquals(nextOrderToDeliver, delivery)
-        return delivery
+        assertEquals(nextOrderToDeliver.orderId, order.id)
+        assertEquals(nextOrderToDeliver.menuItem, order.items)
+        assertEquals(nextOrderToDeliver.total, order.total)
+        return nextOrderToDeliver
     }
 
     fun hasDelivered(delivery: Delivery) {
-        deliveryHub.delivered(delivery)
+        deliveryHub.delivered(delivery.id)
     }
 }
 
@@ -81,7 +93,7 @@ class ChefRole(
 
     fun canFinishCooking(ticket: Ticket) {
         kitchenHub.ticketComplete(ticket)
-        assertEquals(Instant.EPOCH, kitchenHub.ticketFor(ticket.orderId)?.completedAt)
+        assertFalse(kitchenHub.tickets().toList().contains(ticket))
     }
 }
 
@@ -123,7 +135,10 @@ object TestData {
 
     object Pizzas {
         val plainPizza =
-            Menu.Item(Menu.Name("Plain Pizza"), listOf(pizzaDough, tomatoSauce))
+            Menu.Item(
+                Menu.Name("Plain Pizza"),
+                listOf(pizzaDough, tomatoSauce)
+            )
         val margarita = plainPizza
             .withName("Margarita Pizza")
             .addIngredient(mozzarella)
@@ -140,8 +155,14 @@ object TestData {
 
     val minimalMenu = Menu(
         items = setOf(
-            Menu.MenuItem(Pizzas.plainPizza, Money(3.99)),
-            Menu.MenuItem(Pizzas.margarita, Money(4.99))
+            Menu.MenuItem(
+                Pizzas.plainPizza,
+                Money(3.99)
+            ),
+            Menu.MenuItem(
+                Pizzas.margarita,
+                Money(4.99)
+            )
         )
     )
 }
@@ -198,13 +219,17 @@ class InMemoryMenuStorage : MenuStorage {
 }
 
 class InMemoryDeliveryStorage: DeliveryStorage {
-    private val storage = mutableSetOf<Delivery>()
+    private val storage = mutableMapOf<DeliveryId,  Delivery>()
 
-    override fun upsert(delivery: Delivery) {
-        storage.add(delivery)
+    override fun get(id: DeliveryId): Delivery? {
+        return storage[id]
     }
 
-    override fun take(): Delivery = storage.first()
+    override fun upsert(delivery: Delivery) {
+        storage += delivery.id to delivery
+    }
+
+    override fun take(): Delivery = storage.toList().first().second
 }
 
 val cathyTheChef = UserDetails(

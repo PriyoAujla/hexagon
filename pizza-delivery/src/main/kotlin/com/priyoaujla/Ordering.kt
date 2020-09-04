@@ -5,7 +5,7 @@ import java.util.*
 class OrderingHub(
     private val customer: UserDetails,
     private val theMenu: TheMenu,
-    private val orders: Orders,
+    private val orderStorage: OrderStorage,
     private val startBaking: StartBaking
 ) {
 
@@ -20,12 +20,12 @@ class OrderingHub(
                 items = order.items + menuItem
             )
         }
-        orders.upsert(order)
+        orderStorage.upsert(order)
         return order
     }
 
     fun retrieve(orderId: OrderId): Order? {
-        return orders.get(orderId)
+        return orderStorage.get(orderId)
     }
 
     fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
@@ -37,13 +37,23 @@ class OrderingHub(
     }
 
     fun paymentConfirmation(orderId: OrderId, paymentId: PaymentId) {
-        val order = orders.get(orderId)
+        val order = orderStorage.get(orderId)
         order?.let {
-            orders.upsert(it.copy(status = Order.Status.Paid))
+            orderStorage.upsert(it.copy(status = Order.Status.Paid))
             startBaking(order)
         } ?: error("")
     }
 
+}
+
+class OrderProgress(private val orderStorage: OrderStorage) {
+
+    fun update(orderId: OrderId, newStatus: Order.Status) {
+        val order = orderStorage.get(orderId)
+        order?.let {
+            orderStorage.upsert(it.copy(status = newStatus))
+        } ?: error("")
+    }
 }
 
 interface Paypal {
@@ -107,13 +117,7 @@ interface OrderStorage {
 }
 
 class Orders(private val orderStorage: OrderStorage) {
-
-    fun upsert(order: Order) {
-        orderStorage.upsert(order)
-    }
-
     fun get(orderId: OrderId): Order? = orderStorage.get(orderId)
-
 }
 
 data class Money(val value: Double) {

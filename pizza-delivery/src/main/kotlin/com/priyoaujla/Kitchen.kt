@@ -2,14 +2,13 @@ package com.priyoaujla
 
 import java.time.Clock
 import java.time.Instant
-import java.time.ZoneId
 
 class KitchenHub(
     private val chef: UserDetails,
     private val ticketStorage: TicketStorage,
     private val orders: Orders,
-    private val clock: Clock = Clock.fixed(Instant.EPOCH, ZoneId.of("UTC")),
-    private val startDelivery: StartDelivery
+    private val clock: Clock = Clock.systemUTC(),
+    private val cookingFinished: CookingFinished
 ) {
 
     fun createTicket(order: Order) {
@@ -18,20 +17,15 @@ class KitchenHub(
 
     fun tickets(): Set<Ticket> = ticketStorage.list()
 
-    fun ticketFor(orderId: OrderId): Ticket? = ticketStorage.findBy(orderId)
-
     fun nextTicket(): Ticket = ticketStorage.take()
 
     fun ticketComplete(ticket: Ticket) {
         ticketStorage.update(ticket.copy(completedAt = clock.instant()))
-        orders.get(ticket.orderId)?.let {
-            orders.upsert(it.copy(status = Order.Status.Cooked))
-        } ?: error("Could not find order with id ${ticket.orderId}")
-        startDelivery(ticket.orderId)
+        cookingFinished(ticket)
     }
 }
 
-typealias StartDelivery = (OrderId) -> Unit
+typealias CookingFinished = (Ticket) -> Unit
 
 data class Ticket(
     val orderId: OrderId,

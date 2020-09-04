@@ -1,5 +1,8 @@
-package com.priyoaujla
+package componenttests.com.priyoaujla
 
+import com.priyoaujla.Menu
+import com.priyoaujla.Order
+import com.priyoaujla.Ticket
 import org.junit.Test
 
 class PizzaDeliveryTest {
@@ -22,10 +25,10 @@ class PizzaDeliveryTest {
 
 class HasFinishedCookingAnOrder(scenario: Scenario, items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items) {
 
-    private val orderFixture = HasPaidForAnOrder(scenario, items)
+    private val hasPaidForAnOrder = HasPaidForAnOrder(scenario, items)
 
-    val customer get() = orderFixture.customer
-    val order get() = orderFixture.order
+    val customer get() = hasPaidForAnOrder.customer
+    val order get() = hasPaidForAnOrder.order
 
     val chef = scenario.newChef()
     val courier = scenario.newCourier()

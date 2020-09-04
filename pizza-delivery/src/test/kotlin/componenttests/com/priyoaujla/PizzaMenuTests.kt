@@ -1,6 +1,6 @@
-package com.priyoaujla
+package componenttests.com.priyoaujla
 
-import com.priyoaujla.TestData.minimalMenu
+import componenttests.com.priyoaujla.TestData.minimalMenu
 import org.junit.Test
 
 class PizzaMenuTests {
