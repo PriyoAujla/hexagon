@@ -29,7 +29,7 @@ class Scenario {
 
     private val orders = Orders(orderStorage)
 
-    private val orderHub = Ordering(
+    private val ordering = Ordering(
             customer = connorTheCustomer,
             orderStorage = orderStorage,
             startBaking = {
@@ -59,7 +59,7 @@ class Scenario {
     private val paypal = FakePaypal()
 
     fun newCustomer(): CustomerRole =
-        CustomerRole(menuHub, orderHub, paypal)
+        CustomerRole(menuHub, ordering, paypal)
 
     fun newChef(): ChefRole =
         ChefRole(kitchen)
