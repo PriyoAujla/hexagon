@@ -1,6 +1,7 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.*
+import com.priyoaujla.menu.Menu
+import com.priyoaujla.order.*
 import org.junit.Test
 
 class PizzaBakingTest {
@@ -14,8 +15,8 @@ class PizzaBakingTest {
     ).runTest {
         val (first, second) = this
         chef.hasTickets(
-            Ticket.from(first.order),
-            Ticket.from(second.order)
+                toTicket(first.order),
+                toTicket(second.order)
         )
     }
 
@@ -24,14 +25,14 @@ class PizzaBakingTest {
         scenario
     ).runTest {
         val (first, _) = this
-        chef.canPickupNextTicket(Ticket.from(first.order))
+        chef.canPickupNextTicket(toTicket(first.order))
     }
 
     @Test
     fun `the kitchen can update the ticket once cooking is finished`() = HasPaidForAnOrder(
         scenario
     ).runTest {
-        val ticket = Ticket.from(order)
+        val ticket = toTicket(order)
         chef.canFinishCooking(ticket)
         customer.canSeeOrderStatus(ticket.orderId, Order.Status.Cooked)
     }

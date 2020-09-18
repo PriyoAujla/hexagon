@@ -1,8 +1,8 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.Menu
-import com.priyoaujla.Order
-import com.priyoaujla.Ticket
+import com.priyoaujla.menu.Menu
+import com.priyoaujla.order.Order
+import com.priyoaujla.order.toTicket
 import org.junit.Test
 
 class PizzaDeliveryTest {
@@ -34,6 +34,6 @@ class HasFinishedCookingAnOrder(scenario: Scenario, items: List<Menu.MenuItem> =
     val courier = scenario.newCourier()
 
     init {
-        chef.canFinishCooking(Ticket.from(order))
+        chef.canFinishCooking(toTicket(order))
     }
 }

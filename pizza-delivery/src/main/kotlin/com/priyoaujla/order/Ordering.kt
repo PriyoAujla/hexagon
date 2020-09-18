@@ -1,12 +1,14 @@
-package com.priyoaujla
+package com.priyoaujla.order
 
+import com.priyoaujla.kitchen.Ticket
+import com.priyoaujla.menu.Menu
 import java.util.*
 
-class OrderingHub(
-    private val customer: UserDetails,
-    private val theMenu: TheMenu,
-    private val orderStorage: OrderStorage,
-    private val startBaking: StartBaking
+class Ordering(
+        private val customer: UserDetails,
+        private val theMenu: TheMenu,
+        private val orderStorage: OrderStorage,
+        private val startBaking: StartBaking
 ) {
 
     fun menu(): Menu {
@@ -30,13 +32,11 @@ class OrderingHub(
 
     fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
         return when(paymentType) {
-            PaymentType.Paypal -> PaymentInstructions.GotoPaypal(order)
-            PaymentType.DirectDebit -> TODO()
-            PaymentType.CreditCard -> TODO()
+            PaymentType.Paypal -> PaymentInstructions.RedirectToPaypal(order)
         }
     }
 
-    fun paymentConfirmation(orderId: OrderId, paymentId: PaymentId) {
+    fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
         val order = orderStorage.get(orderId)
         order?.let {
             orderStorage.upsert(it.copy(status = Order.Status.Paid))
@@ -65,20 +65,20 @@ typealias StartBaking = (Order) -> Unit
 
 sealed class PaymentInstructions {
     abstract val order: Order
-    data class GotoPaypal(override val order: Order) : PaymentInstructions()
+    data class RedirectToPaypal(override val order: Order) : PaymentInstructions()
 }
 
 data class PaymentId(val value: String)
 
 enum class PaymentType {
-    DirectDebit, CreditCard, Paypal
+    Paypal
 }
 
 data class UserDetails(
-    val userId: UserId,
-    val givenName: GivenName,
-    val familyName: FamilyName,
-    val address: Address
+        val userId: UserId,
+        val givenName: GivenName,
+        val familyName: FamilyName,
+        val address: Address
 )
 
 data class UserId(val value: UUID) {
@@ -93,10 +93,10 @@ data class FamilyName(val value: String)
 data class Address(val value: String)
 
 data class Order(
-    val id: OrderId = OrderId.mint(),
-    val items: List<Menu.MenuItem> = emptyList(),
-    val total: Money,
-    val status: Status
+        val id: OrderId = OrderId.mint(),
+        val items: List<Menu.MenuItem> = emptyList(),
+        val total: Money,
+        val status: Status
 ) {
     enum class Status {
         New, Paid, Cooked, Delivered
@@ -111,7 +111,6 @@ data class OrderId(val uuid: UUID) {
 }
 
 interface OrderStorage {
-
     fun upsert(order: Order)
     fun get(orderId: OrderId): Order?
 }
@@ -130,9 +129,4 @@ data class Money(val value: Double) {
     }
 }
 
-data class Menu(val items: Set<MenuItem>) {
-    data class MenuItem(val item: Item, val price: Money)
-    data class Item(val name: Name, val ingredients: List<Ingredient>)
-    data class Name(val value: String)
-    data class Ingredient(val value: String)
-}
+fun toTicket(order: Order): Ticket = Ticket(order.id, order.items.map { it.item })
