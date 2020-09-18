@@ -3,7 +3,7 @@ package componenttests.com.priyoaujla
 import com.priyoaujla.menu.Menu
 import com.priyoaujla.order.*
 import com.priyoaujla.order.payment.PaymentType
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PizzaBakingTest {
 
@@ -37,18 +37,5 @@ class PizzaBakingTest {
         chef.canFinishCooking(secondTicket)
         secondCustomer.canSeeOrderStatus(firstTicket.orderId, Order.Status.Cooked)
     }
-}
-
-private fun thereAreTwoPaidOrders(scenario: Scenario) =
-    HasPaidForAnOrder(scenario) to HasPaidForAnOrder(
-        scenario,
-        TestData.minimalMenu.items.take(1)
-    )
-
-class HasPaidForAnOrder(scenario: Scenario, items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items) {
-    val customer = scenario.newCustomer()
-
-    val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
-    val paymentId = customer.canPay(order, PaymentType.Paypal)
 }
 

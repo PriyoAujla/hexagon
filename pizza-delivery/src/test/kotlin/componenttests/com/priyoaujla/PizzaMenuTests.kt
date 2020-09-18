@@ -1,7 +1,7 @@
 package componenttests.com.priyoaujla
 
 import componenttests.com.priyoaujla.TestData.minimalMenu
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PizzaMenuTests {
 
