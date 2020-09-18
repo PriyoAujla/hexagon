@@ -6,6 +6,9 @@ import com.priyoaujla.menu.Menu
 import com.priyoaujla.menu.TheMenu
 import com.priyoaujla.menu.MenuStorage
 import com.priyoaujla.order.*
+import com.priyoaujla.order.payment.PaymentId
+import com.priyoaujla.order.payment.PaymentType
+import com.priyoaujla.order.payment.Paypal
 import componenttests.com.priyoaujla.TestData.Ingredients.basil
 import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
 import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
@@ -28,7 +31,6 @@ class Scenario {
 
     private val orderHub = Ordering(
             customer = connorTheCustomer,
-            theMenu = { menuHub.fetch() },
             orderStorage = orderStorage,
             startBaking = {
                 kitchen.createTicket(toTicket(it))
@@ -57,7 +59,7 @@ class Scenario {
     private val paypal = FakePaypal()
 
     fun newCustomer(): CustomerRole =
-        CustomerRole(orderHub, paypal)
+        CustomerRole(menuHub, orderHub, paypal)
 
     fun newChef(): ChefRole =
         ChefRole(kitchen)
@@ -101,12 +103,13 @@ class ChefRole(
 }
 
 class CustomerRole(
+        private val theMenu: TheMenu,
         private val ordering: Ordering,
         private val paypal: Paypal
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
-        val menu = ordering.menu()
+        val menu = theMenu.fetch()
         assertEquals(menu.items, menuItems)
     }
 

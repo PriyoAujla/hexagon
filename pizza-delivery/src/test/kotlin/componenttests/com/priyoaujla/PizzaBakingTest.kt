@@ -2,6 +2,7 @@ package componenttests.com.priyoaujla
 
 import com.priyoaujla.menu.Menu
 import com.priyoaujla.order.*
+import com.priyoaujla.order.payment.PaymentType
 import org.junit.Test
 
 class PizzaBakingTest {

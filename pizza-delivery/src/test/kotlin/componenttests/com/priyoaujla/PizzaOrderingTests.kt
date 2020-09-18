@@ -2,7 +2,7 @@ package componenttests.com.priyoaujla
 
 import com.priyoaujla.order.Money
 import com.priyoaujla.order.Order
-import com.priyoaujla.order.PaymentType
+import com.priyoaujla.order.payment.PaymentType
 import componenttests.com.priyoaujla.TestData.minimalMenu
 import org.junit.Test
 
