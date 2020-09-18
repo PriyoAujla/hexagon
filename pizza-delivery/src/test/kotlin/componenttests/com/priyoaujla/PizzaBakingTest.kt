@@ -11,18 +11,7 @@ class PizzaBakingTest {
     private val chef = scenario.newChef()
 
     @Test
-    fun `once an order is paid for the kitchen will receive the order as a ticket`() = thereAreTwoPaidOrders(
-        scenario
-    ).runTest {
-        val (first, second) = this
-        chef.hasTickets(
-                toTicket(first.order),
-                toTicket(second.order)
-        )
-    }
-
-    @Test
-    fun `the kitchen will pick up the first ticket received`() = thereAreTwoPaidOrders(
+    fun `once an order is paid for the kitchen will pick up the first ticket received`() = thereAreTwoPaidOrders(
         scenario
     ).runTest {
         val (first, _) = this
@@ -30,12 +19,23 @@ class PizzaBakingTest {
     }
 
     @Test
-    fun `the kitchen can update the ticket once cooking is finished`() = HasPaidForAnOrder(
+    fun `the kitchen can update the ticket once cooking is finished and proceed to the next ticket`() = thereAreTwoPaidOrders(
         scenario
     ).runTest {
-        val ticket = toTicket(order)
-        chef.canFinishCooking(ticket)
-        customer.canSeeOrderStatus(ticket.orderId, Order.Status.Cooked)
+        val (first, second) = this
+
+        val firstCustomer = first.customer
+        val firstTicket = toTicket(first.order)
+
+        val secondCustomer = second.customer
+        val secondTicket = toTicket(second.order)
+
+        chef.canFinishCooking(firstTicket)
+        firstCustomer.canSeeOrderStatus(firstTicket.orderId, Order.Status.Cooked)
+
+        chef.canPickupNextTicket(secondTicket)
+        chef.canFinishCooking(secondTicket)
+        secondCustomer.canSeeOrderStatus(firstTicket.orderId, Order.Status.Cooked)
     }
 }
 

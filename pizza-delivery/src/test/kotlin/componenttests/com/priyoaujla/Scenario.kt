@@ -89,7 +89,9 @@ class ChefRole(
 ) {
 
     fun hasTickets(vararg tickets: Ticket) {
-        assertEquals(tickets.asList(), kitchen.tickets().toList())
+        tickets.forEach {
+            assertEquals(it, kitchen.nextTicket())
+        }
     }
 
     fun canPickupNextTicket(ticket: Ticket) {
