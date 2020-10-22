@@ -1,13 +1,10 @@
 package com.priyoaujla.kitchen
 
 import com.priyoaujla.delivery.DeliveryNote
-import com.priyoaujla.menu.Menu
-import com.priyoaujla.order.Order
 import com.priyoaujla.order.OrderId
 import com.priyoaujla.order.OrderStatus
 import com.priyoaujla.order.Orders
 import java.time.Clock
-import java.time.Instant
 
 class Kitchen(
         private val ticketStorage: TicketStorage,
@@ -42,22 +39,4 @@ class CreateDelivery(private val orders: Orders, private val sendToDelivery: (De
         val order = orders.get(ticket.orderId) ?: error("Implement me!")
         sendToDelivery(DeliveryNote(orderId = ticket.orderId, menuItem = order.items, total = order.total))
     }
-}
-
-data class Ticket(
-        val orderId: OrderId,
-        val items: List<Menu.Item> = emptyList(),
-        val completedAt: Instant? = null
-)
-
-interface TicketStorage {
-    fun add(ticket: Ticket)
-
-    fun list(): Set<Ticket>
-
-    fun take(): Ticket
-
-    fun update(ticket: Ticket)
-
-    fun findBy(orderId: OrderId): Ticket?
 }

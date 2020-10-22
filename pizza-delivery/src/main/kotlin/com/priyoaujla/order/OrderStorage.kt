@@ -5,8 +5,3 @@ interface OrderStorage {
     fun get(orderId: OrderId): Order?
 }
 
-interface OrderStatusStorage {
-    fun upsert(orderStatus: OrderStatus)
-    fun get(orderId: OrderId): OrderStatus?
-
-}
