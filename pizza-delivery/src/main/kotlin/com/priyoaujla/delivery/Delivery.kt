@@ -21,9 +21,9 @@ class Delivery(
     }
 }
 
-class NotifyDelivered(val orderProgressUpdater: (OrderId, Order.Status) -> Unit): (DeliveryNote) -> Unit {
+class NotifyDelivered(val orderProgressUpdater: (OrderId, OrderStatus.Status) -> Unit): (DeliveryNote) -> Unit {
     override fun invoke(deliveryNote: DeliveryNote) {
-        orderProgressUpdater(deliveryNote.orderId, Order.Status.Delivered)
+        orderProgressUpdater(deliveryNote.orderId, OrderStatus.Status.Delivered)
     }
 }
 

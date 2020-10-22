@@ -1,8 +1,8 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.menu.Menu
-import com.priyoaujla.order.*
-import com.priyoaujla.order.payment.PaymentType
+import com.priyoaujla.order.Order
+import com.priyoaujla.order.OrderStatus
+import com.priyoaujla.order.toTicket
 import org.junit.jupiter.api.Test
 
 class PizzaBakingTest {
@@ -31,11 +31,11 @@ class PizzaBakingTest {
         val secondTicket = toTicket(second.order)
 
         chef.canFinishCooking(firstTicket)
-        firstCustomer.canSeeOrderStatus(firstTicket.orderId, Order.Status.Cooked)
+        firstCustomer.canSeeOrderStatus(firstTicket.orderId, OrderStatus.Status.Cooked)
 
         chef.canPickupNextTicket(secondTicket)
         chef.canFinishCooking(secondTicket)
-        secondCustomer.canSeeOrderStatus(firstTicket.orderId, Order.Status.Cooked)
+        secondCustomer.canSeeOrderStatus(firstTicket.orderId, OrderStatus.Status.Cooked)
     }
 }
 

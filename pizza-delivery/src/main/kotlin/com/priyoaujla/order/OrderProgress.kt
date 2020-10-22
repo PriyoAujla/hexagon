@@ -1,11 +1,11 @@
 package com.priyoaujla.order
 
-class OrderProgress(private val orderStorage: OrderStorage) {
+class OrderProgress(private val orderStatusStorage: OrderStatusStorage) {
 
-    fun update(orderId: OrderId, newStatus: Order.Status) {
-        val order = orderStorage.get(orderId)
+    fun update(orderId: OrderId, newStatus: OrderStatus.Status) {
+        val order = orderStatusStorage.get(orderId)
         order?.let {
-            orderStorage.upsert(it.copy(status = newStatus))
+            orderStatusStorage.upsert(it.copy(status = newStatus))
         } ?: error("")
     }
 }

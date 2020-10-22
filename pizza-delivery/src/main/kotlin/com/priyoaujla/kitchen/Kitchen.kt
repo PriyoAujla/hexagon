@@ -4,6 +4,7 @@ import com.priyoaujla.delivery.DeliveryNote
 import com.priyoaujla.menu.Menu
 import com.priyoaujla.order.Order
 import com.priyoaujla.order.OrderId
+import com.priyoaujla.order.OrderStatus
 import com.priyoaujla.order.Orders
 import java.time.Clock
 import java.time.Instant
@@ -27,11 +28,11 @@ class Kitchen(
 }
 
 class NotifyTicketComplete(
-        val updateOrderStatus: (OrderId, Order.Status) -> Unit,
+        val updateOrderStatus: (OrderId, OrderStatus.Status) -> Unit,
         val createDelivery: CreateDelivery
 ) : (Ticket) -> Unit {
     override fun invoke(ticket: Ticket) {
-        updateOrderStatus(ticket.orderId, Order.Status.Cooked)
+        updateOrderStatus(ticket.orderId, OrderStatus.Status.Cooked)
         createDelivery(ticket)
     }
 }

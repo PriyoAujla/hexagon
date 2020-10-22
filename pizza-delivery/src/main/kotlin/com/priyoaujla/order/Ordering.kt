@@ -7,19 +7,20 @@ import com.priyoaujla.order.payment.PaymentInstructions
 import com.priyoaujla.order.payment.PaymentType
 
 class Ordering(
-        private val customer: UserDetails,
         private val orderStorage: OrderStorage,
+        private val orderStatusStorage: OrderStatusStorage,
         private val startBaking: StartBaking
 ) {
 
     fun order(items: List<Menu.MenuItem>): Order {
-        val order = items.fold(Order(total = Money(0.0), status = Order.Status.New)) { order, menuItem ->
+        val order = items.fold(Order(total = Money(0.0))) { order, menuItem ->
             order.copy(
                 total = order.total + menuItem.price,
                 items = order.items + menuItem
             )
         }
         orderStorage.upsert(order)
+        orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.New))
         return order
     }
 
@@ -30,13 +31,14 @@ class Ordering(
     fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
         return when(paymentType) {
             PaymentType.Paypal -> PaymentInstructions.RedirectToPaypal(order)
+            PaymentType.Cash -> PaymentInstructions.NoInstructions(order)
         }
     }
 
     fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
         val order = orderStorage.get(orderId)
         order?.let {
-            orderStorage.upsert(it.copy(status = Order.Status.Paid))
+            orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.Paid))
             startBaking(order)
         } ?: error("")
     }

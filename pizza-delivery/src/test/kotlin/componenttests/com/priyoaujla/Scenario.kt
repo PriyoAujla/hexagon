@@ -28,17 +28,19 @@ class Scenario {
 
     private val orderStorage = InMemoryOrderStorage()
 
+    private val orderStatusStorage = InMemoryOrderStatusStorage()
+
     private val orders = Orders(orderStorage)
 
     private val ordering = Ordering(
-            customer = connorTheCustomer,
             orderStorage = orderStorage,
+            orderStatusStorage = orderStatusStorage,
             startBaking = {
                 kitchen.createTicket(toTicket(it))
             }
     )
 
-    private val orderProgress = OrderProgress(orderStorage)
+    private val orderProgress = OrderProgress(orderStatusStorage)
 
     private val kitchen = Kitchen(
             ticketStorage = InMemoryTicketStorage(),
@@ -57,10 +59,12 @@ class Scenario {
             }
     )
 
+    private val trackingOrder = TrackOrder(orderStatusStorage)
+
     private val paypal = FakePaypal()
 
     fun newCustomer(): CustomerRole =
-        CustomerRole(menuHub, ordering, paypal)
+        CustomerRole(menuHub, ordering, paypal, trackingOrder)
 
     fun newChef(): ChefRole =
         ChefRole(kitchen)
@@ -89,12 +93,6 @@ class ChefRole(
     private val kitchen: Kitchen
 ) {
 
-    fun hasTickets(vararg tickets: Ticket) {
-        tickets.forEach {
-            assertEquals(it, kitchen.nextTicket())
-        }
-    }
-
     fun canPickupNextTicket(ticket: Ticket) {
         assertEquals(ticket, kitchen.nextTicket())
     }
@@ -108,7 +106,8 @@ class ChefRole(
 class CustomerRole(
         private val theMenu: TheMenu,
         private val ordering: Ordering,
-        private val paypal: Paypal
+        private val paypal: Paypal,
+        private val trackOrder: TrackOrder
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
@@ -128,8 +127,8 @@ class CustomerRole(
         ordering.paymentConfirmed(paymentInstructions.order.id, paymentId)
     }
 
-    fun canSeeOrderStatus(orderId: OrderId, status: Order.Status){
-        assertEquals(status, ordering.retrieve(orderId)?.status)
+    fun canSeeOrderStatus(orderId: OrderId, status: OrderStatus.Status){
+        assertEquals(status, trackOrder.statusOf(orderId)?.status)
     }
 }
 
@@ -202,6 +201,17 @@ class InMemoryTicketStorage: TicketStorage {
     }
 
     override fun findBy(orderId: OrderId): Ticket? = storage.find { it.orderId == orderId }
+}
+
+class InMemoryOrderStatusStorage: OrderStatusStorage {
+    private val storage = mutableSetOf<OrderStatus>()
+
+    override fun upsert(orderStatus: OrderStatus) {
+        storage.removeIf { it.id == orderStatus.id}
+        storage.add(orderStatus)
+    }
+
+    override fun get(orderId: OrderId): OrderStatus? = storage.find { it.id == orderId }
 }
 
 class InMemoryOrderStorage: OrderStorage {

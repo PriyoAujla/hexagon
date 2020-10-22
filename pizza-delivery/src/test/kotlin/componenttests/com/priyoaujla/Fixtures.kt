@@ -2,28 +2,48 @@ package componenttests.com.priyoaujla
 
 import com.priyoaujla.menu.Menu
 import com.priyoaujla.order.Money
+import com.priyoaujla.order.Order
 import com.priyoaujla.order.payment.PaymentType
 import com.priyoaujla.order.toTicket
 
 fun thereAreTwoPaidOrders(scenario: Scenario) =
-        HasPaidOrder(scenario) to HasPaidOrder(
+        PaypalPaidOrder(scenario) to PaypalPaidOrder(
                 scenario,
                 TestData.minimalMenu.items.take(1)
         )
 
-class HasPaidOrder(scenario: Scenario, items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items) {
-    val customer = scenario.newCustomer()
+abstract class OrderSteps {
+    abstract val customer: CustomerRole
+    abstract val order: Order
+}
 
-    val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
+class PaypalPaidOrder(
+        scenario: Scenario,
+        items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
+): OrderSteps() {
+    override val customer = scenario.newCustomer()
+
+    override val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
+    val paymentId = customer.canPay(order, PaymentType.Cash)
+}
+
+class CashOnDeliveryOrder(
+        scenario: Scenario,
+        items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
+): OrderSteps() {
+    override val customer = scenario.newCustomer()
+
+    override val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
     val paymentId = customer.canPay(order, PaymentType.Paypal)
 }
 
-class HasFinishedCookingOrder(scenario: Scenario, items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items) {
+class HasFinishedCookingOrder(
+        scenario: Scenario,
+        private val withOrder: OrderSteps = PaypalPaidOrder(scenario, TestData.minimalMenu.items.toList() + TestData.minimalMenu.items)
+) {
 
-    private val hasPaidForAnOrder = HasPaidOrder(scenario, items)
-
-    val customer get() = hasPaidForAnOrder.customer
-    val order get() = hasPaidForAnOrder.order
+    val customer get() = withOrder.customer
+    val order get() = withOrder.order
 
     val chef = scenario.newChef()
     val courier = scenario.newCourier()
