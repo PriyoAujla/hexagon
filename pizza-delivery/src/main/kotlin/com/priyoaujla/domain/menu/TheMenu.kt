@@ -1,6 +1,6 @@
-package com.priyoaujla.menu
+package com.priyoaujla.domain.menu
 
-import com.priyoaujla.order.Money
+import com.priyoaujla.domain.order.Money
 
 class TheMenu(
     private val menuStorage: MenuStorage

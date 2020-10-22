@@ -1,4 +1,4 @@
-package com.priyoaujla.order
+package com.priyoaujla.domain.order
 
 class TrackOrder(private val orderStatusStorage: OrderStatusStorage) {
 

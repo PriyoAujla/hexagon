@@ -1,8 +1,8 @@
-package com.priyoaujla.delivery
+package com.priyoaujla.domain.delivery
 
-import com.priyoaujla.menu.Menu
-import com.priyoaujla.order.Money
-import com.priyoaujla.order.OrderId
+import com.priyoaujla.domain.menu.Menu
+import com.priyoaujla.domain.order.Money
+import com.priyoaujla.domain.order.OrderId
 import java.util.*
 
 data class DeliveryNote(

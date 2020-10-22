@@ -1,10 +1,10 @@
-package com.priyoaujla.order
+package com.priyoaujla.domain.order
 
-import com.priyoaujla.kitchen.Ticket
-import com.priyoaujla.menu.Menu
-import com.priyoaujla.order.payment.PaymentId
-import com.priyoaujla.order.payment.PaymentInstructions
-import com.priyoaujla.order.payment.PaymentType
+import com.priyoaujla.domain.kitchen.Ticket
+import com.priyoaujla.domain.menu.Menu
+import com.priyoaujla.domain.order.payment.PaymentId
+import com.priyoaujla.domain.order.payment.PaymentInstructions
+import com.priyoaujla.domain.order.payment.PaymentType
 
 class Ordering(
         private val orderStorage: OrderStorage,

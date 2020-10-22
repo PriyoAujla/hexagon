@@ -1,18 +1,19 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.delivery.*
-import com.priyoaujla.kitchen.*
-import com.priyoaujla.menu.Menu
-import com.priyoaujla.menu.TheMenu
-import com.priyoaujla.menu.MenuStorage
-import com.priyoaujla.order.*
-import com.priyoaujla.order.payment.PaymentId
-import com.priyoaujla.order.payment.PaymentType
-import com.priyoaujla.order.payment.Paypal
+import com.priyoaujla.domain.delivery.*
+import com.priyoaujla.domain.kitchen.*
+import com.priyoaujla.domain.menu.Menu
+import com.priyoaujla.domain.menu.TheMenu
+import com.priyoaujla.domain.menu.MenuStorage
+import com.priyoaujla.domain.order.*
+import com.priyoaujla.domain.order.payment.PaymentId
+import com.priyoaujla.domain.order.payment.PaymentType
+import com.priyoaujla.domain.order.payment.Paypal
 import componenttests.com.priyoaujla.TestData.Ingredients.basil
 import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
 import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
 import componenttests.com.priyoaujla.TestData.Ingredients.tomatoSauce
+import componenttests.com.priyoaujla.transaction.IsCloneable
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import java.util.*
@@ -182,8 +183,9 @@ class FakePaypal: Paypal {
     }
 }
 
-class InMemoryTicketStorage: TicketStorage {
-    private val storage = mutableSetOf<Ticket>()
+class InMemoryTicketStorage(
+        private val storage: MutableSet<Ticket> = mutableSetOf()
+): TicketStorage, IsCloneable<InMemoryTicketStorage> {
 
     override fun add(ticket: Ticket) {
         storage.add(ticket)
@@ -201,10 +203,13 @@ class InMemoryTicketStorage: TicketStorage {
     }
 
     override fun findBy(orderId: OrderId): Ticket? = storage.find { it.orderId == orderId }
+
+    override fun clone(): InMemoryTicketStorage = InMemoryTicketStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
-class InMemoryOrderStatusStorage: OrderStatusStorage {
-    private val storage = mutableSetOf<OrderStatus>()
+class InMemoryOrderStatusStorage(
+        private val storage: MutableSet<OrderStatus> = mutableSetOf()
+): OrderStatusStorage, IsCloneable<InMemoryOrderStatusStorage> {
 
     override fun upsert(orderStatus: OrderStatus) {
         storage.removeIf { it.id == orderStatus.id}
@@ -212,10 +217,14 @@ class InMemoryOrderStatusStorage: OrderStatusStorage {
     }
 
     override fun get(orderId: OrderId): OrderStatus? = storage.find { it.id == orderId }
+
+    override fun clone(): InMemoryOrderStatusStorage = InMemoryOrderStatusStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
-class InMemoryOrderStorage: OrderStorage {
-    private val storage = mutableSetOf<Order>()
+class InMemoryOrderStorage(
+        private val storage: MutableSet<Order> = mutableSetOf()
+): OrderStorage, IsCloneable<InMemoryOrderStorage> {
+
 
     override fun upsert(order: Order) {
         storage.removeIf { it.id == order.id}
@@ -223,10 +232,14 @@ class InMemoryOrderStorage: OrderStorage {
     }
 
     override fun get(orderId: OrderId): Order? = storage.find { it.id == orderId }
+
+    override fun clone(): InMemoryOrderStorage = InMemoryOrderStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
-class InMemoryMenuStorage : MenuStorage {
-    private val storage = mutableSetOf<Menu.MenuItem>()
+class InMemoryMenuStorage(
+        private val storage: MutableSet<Menu.MenuItem> = mutableSetOf()
+) : MenuStorage, IsCloneable<InMemoryMenuStorage> {
+
 
     override fun get(): Menu {
         return Menu(storage)
@@ -235,10 +248,13 @@ class InMemoryMenuStorage : MenuStorage {
     override fun add(item: Menu.Item, price: Money) {
         storage.add(Menu.MenuItem(item, price))
     }
+
+    override fun clone(): InMemoryMenuStorage = InMemoryMenuStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
-class InMemoryDeliveryStorage: DeliveryStorage {
-    private val storage = mutableMapOf<DeliveryId, DeliveryNote>()
+class InMemoryDeliveryStorage(
+        private val storage: MutableMap<DeliveryId, DeliveryNote> = mutableMapOf<DeliveryId, DeliveryNote>()
+): DeliveryStorage, IsCloneable<InMemoryDeliveryStorage> {
 
     override fun get(id: DeliveryId): DeliveryNote? {
         return storage[id]
@@ -249,6 +265,9 @@ class InMemoryDeliveryStorage: DeliveryStorage {
     }
 
     override fun take(): DeliveryNote = storage.toList().first().second
+
+    override fun clone(): InMemoryDeliveryStorage =
+            InMemoryDeliveryStorage(mutableMapOf(*storage.toList().toTypedArray()))
 }
 
 val cathyTheChef = UserDetails(

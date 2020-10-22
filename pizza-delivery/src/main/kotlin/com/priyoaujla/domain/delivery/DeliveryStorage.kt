@@ -1,4 +1,4 @@
-package com.priyoaujla.delivery
+package com.priyoaujla.domain.delivery
 
 interface DeliveryStorage {
     fun get(id: DeliveryId): DeliveryNote?

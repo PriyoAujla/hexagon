@@ -1,6 +1,6 @@
-package com.priyoaujla.kitchen
+package com.priyoaujla.domain.kitchen
 
-import com.priyoaujla.order.OrderId
+import com.priyoaujla.domain.order.OrderId
 
 interface TicketStorage {
     fun add(ticket: Ticket)

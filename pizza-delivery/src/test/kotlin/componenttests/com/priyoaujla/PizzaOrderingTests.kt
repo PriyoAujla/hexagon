@@ -1,9 +1,8 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.order.Money
-import com.priyoaujla.order.Order
-import com.priyoaujla.order.OrderStatus
-import com.priyoaujla.order.payment.PaymentType
+import com.priyoaujla.domain.order.Money
+import com.priyoaujla.domain.order.OrderStatus
+import com.priyoaujla.domain.order.payment.PaymentType
 import componenttests.com.priyoaujla.TestData.minimalMenu
 import org.junit.jupiter.api.Test
 

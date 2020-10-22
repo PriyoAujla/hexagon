@@ -1,9 +1,9 @@
-package com.priyoaujla.kitchen
+package com.priyoaujla.domain.kitchen
 
-import com.priyoaujla.delivery.DeliveryNote
-import com.priyoaujla.order.OrderId
-import com.priyoaujla.order.OrderStatus
-import com.priyoaujla.order.Orders
+import com.priyoaujla.domain.delivery.DeliveryNote
+import com.priyoaujla.domain.order.OrderId
+import com.priyoaujla.domain.order.OrderStatus
+import com.priyoaujla.domain.order.Orders
 import java.time.Clock
 
 class Kitchen(

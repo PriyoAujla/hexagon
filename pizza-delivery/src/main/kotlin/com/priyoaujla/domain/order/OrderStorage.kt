@@ -1,4 +1,4 @@
-package com.priyoaujla.order
+package com.priyoaujla.domain.order
 
 interface OrderStorage {
     fun upsert(order: Order)

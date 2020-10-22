@@ -1,6 +1,6 @@
-package com.priyoaujla.delivery
+package com.priyoaujla.domain.delivery
 
-import com.priyoaujla.order.*
+import com.priyoaujla.domain.order.*
 
 class Delivery(
         private val deliveryStorage: DeliveryStorage,

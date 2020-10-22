@@ -1,10 +1,10 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.menu.Menu
-import com.priyoaujla.order.Money
-import com.priyoaujla.order.Order
-import com.priyoaujla.order.payment.PaymentType
-import com.priyoaujla.order.toTicket
+import com.priyoaujla.domain.menu.Menu
+import com.priyoaujla.domain.order.Money
+import com.priyoaujla.domain.order.Order
+import com.priyoaujla.domain.order.payment.PaymentType
+import com.priyoaujla.domain.order.toTicket
 
 fun thereAreTwoPaidOrders(scenario: Scenario) =
         PaypalPaidOrder(scenario) to PaypalPaidOrder(

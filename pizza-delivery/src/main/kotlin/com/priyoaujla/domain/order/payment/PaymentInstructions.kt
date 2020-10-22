@@ -1,6 +1,6 @@
-package com.priyoaujla.order.payment
+package com.priyoaujla.domain.order.payment
 
-import com.priyoaujla.order.Order
+import com.priyoaujla.domain.order.Order
 
 sealed class PaymentInstructions {
     abstract val order: Order

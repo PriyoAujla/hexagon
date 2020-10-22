@@ -1,6 +1,6 @@
-package com.priyoaujla.order
+package com.priyoaujla.domain.order
 
-import com.priyoaujla.menu.Menu
+import com.priyoaujla.domain.menu.Menu
 import java.util.*
 
 data class Order(
