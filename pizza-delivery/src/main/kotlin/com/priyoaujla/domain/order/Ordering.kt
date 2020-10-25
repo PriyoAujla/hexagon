@@ -5,9 +5,10 @@ import com.priyoaujla.domain.menu.Menu
 import com.priyoaujla.domain.order.payment.PaymentId
 import com.priyoaujla.domain.order.payment.PaymentInstructions
 import com.priyoaujla.domain.order.payment.PaymentType
+import com.priyoaujla.transaction.Transactor
 
 class Ordering(
-        private val orderStorage: OrderStorage,
+        private val orderStorageTransactor: Transactor<OrderStorage>,
         private val orderStatusStorage: OrderStatusStorage,
         private val startBaking: StartBaking
 ) {
@@ -19,13 +20,18 @@ class Ordering(
                 items = order.items + menuItem
             )
         }
-        orderStorage.upsert(order)
-        orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.New))
+        orderStorageTransactor.perform { orderStorage ->
+            orderStorage.upsert(order)
+            orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.New))
+        }
+
         return order
     }
 
     fun retrieve(orderId: OrderId): Order? {
-        return orderStorage.get(orderId)
+        return orderStorageTransactor.perform { orderStorage ->
+            orderStorage.get(orderId)
+        }
     }
 
     fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
@@ -36,11 +42,13 @@ class Ordering(
     }
 
     fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
-        val order = orderStorage.get(orderId)
-        order?.let {
-            orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.Paid))
-            startBaking(order)
-        } ?: error("")
+        orderStorageTransactor.perform { orderStorage ->
+            val order = orderStorage.get(orderId)
+            order?.let {
+                orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.Paid))
+                startBaking(order)
+            } ?: error("")
+        }
     }
 
 }

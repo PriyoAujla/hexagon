@@ -1,5 +1,7 @@
 package com.priyoaujla.domain.order
 
-class Orders(private val orderStorage: OrderStorage) {
-    fun get(orderId: OrderId): Order? = orderStorage.get(orderId)
+import com.priyoaujla.transaction.Transactor
+
+class Orders(private val orderStorageTransactor: Transactor<OrderStorage>) {
+    fun get(orderId: OrderId): Order? = orderStorageTransactor.perform { it.get(orderId) }
 }

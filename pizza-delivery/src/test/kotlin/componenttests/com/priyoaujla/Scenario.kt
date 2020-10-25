@@ -9,10 +9,12 @@ import com.priyoaujla.domain.order.*
 import com.priyoaujla.domain.order.payment.PaymentId
 import com.priyoaujla.domain.order.payment.PaymentType
 import com.priyoaujla.domain.order.payment.Paypal
+import com.priyoaujla.transaction.Transactor
 import componenttests.com.priyoaujla.TestData.Ingredients.basil
 import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
 import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
 import componenttests.com.priyoaujla.TestData.Ingredients.tomatoSauce
+import componenttests.com.priyoaujla.transaction.InMemoryTransactor
 import componenttests.com.priyoaujla.transaction.IsCloneable
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -27,14 +29,16 @@ class Scenario {
             }
         }
 
-    private val orderStorage = InMemoryOrderStorage()
+    private val orderStorage: InMemoryOrderStorage = InMemoryOrderStorage()
 
     private val orderStatusStorage = InMemoryOrderStatusStorage()
 
-    private val orders = Orders(orderStorage)
+    private val orderStorageTransactor : Transactor<OrderStorage> = InMemoryTransactor.of(orderStorage, InMemoryOrderStorage::clone)
+
+    private val orders = Orders(orderStorageTransactor)
 
     private val ordering = Ordering(
-            orderStorage = orderStorage,
+            orderStorageTransactor = orderStorageTransactor,
             orderStatusStorage = orderStatusStorage,
             startBaking = {
                 kitchen.createTicket(toTicket(it))
@@ -221,10 +225,9 @@ class InMemoryOrderStatusStorage(
     override fun clone(): InMemoryOrderStatusStorage = InMemoryOrderStatusStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
-class InMemoryOrderStorage(
+data class InMemoryOrderStorage(
         private val storage: MutableSet<Order> = mutableSetOf()
 ): OrderStorage, IsCloneable<InMemoryOrderStorage> {
-
 
     override fun upsert(order: Order) {
         storage.removeIf { it.id == order.id}
