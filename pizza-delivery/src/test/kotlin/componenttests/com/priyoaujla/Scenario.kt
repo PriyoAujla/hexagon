@@ -33,7 +33,7 @@ class Scenario {
 
     private val orderStatusStorage = InMemoryOrderStatusStorage()
 
-    private val orderStorageTransactor : Transactor<OrderStorage> = InMemoryTransactor.of(orderStorage, InMemoryOrderStorage::clone)
+    private val orderStorageTransactor : Transactor<OrderStorage> = InMemoryTransactor { orderStorage }
 
     private val orders = Orders(orderStorageTransactor)
 
