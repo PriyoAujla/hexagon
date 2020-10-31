@@ -8,9 +8,7 @@ import com.priyoaujla.domain.order.payment.PaymentType
 import com.priyoaujla.transaction.Transactor
 
 class Ordering(
-        private val orderStorageTransactor: Transactor<OrderStorage>,
-        private val orderStatusStorage: OrderStatusStorage,
-        private val startBaking: StartBaking
+    private val transactor: Transactor<Triple<OrderStorage, OrderStatusStorage, StartBaking>>
 ) {
 
     fun order(items: List<Menu.MenuItem>): Order {
@@ -20,7 +18,7 @@ class Ordering(
                 items = order.items + menuItem
             )
         }
-        orderStorageTransactor.perform { orderStorage ->
+        transactor.perform { (orderStorage, orderStatusStorage) ->
             orderStorage.upsert(order)
             orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.New))
         }
@@ -29,7 +27,7 @@ class Ordering(
     }
 
     fun retrieve(orderId: OrderId): Order? {
-        return orderStorageTransactor.perform { orderStorage ->
+        return transactor.perform { (orderStorage) ->
             orderStorage.get(orderId)
         }
     }
@@ -42,7 +40,7 @@ class Ordering(
     }
 
     fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
-        orderStorageTransactor.perform { orderStorage ->
+        transactor.perform { (orderStorage, orderStatusStorage, startBaking) ->
             val order = orderStorage.get(orderId)
             order?.let {
                 orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.Paid))

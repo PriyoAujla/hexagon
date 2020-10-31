@@ -1,21 +1,29 @@
 package com.priyoaujla.domain.delivery
 
 import com.priyoaujla.domain.order.*
+import com.priyoaujla.transaction.Transactor
 
 class Delivery(
-        private val deliveryStorage: DeliveryStorage,
-        private val notifyDelivered: NotifyDelivered
+    private val transactor: Transactor<Pair<DeliveryStorage, NotifyDelivered>>
 ) {
-    fun nextDelivery(): DeliveryNote = deliveryStorage.take()
+    fun nextDelivery(): DeliveryNote {
+        return transactor.perform { (deliveryStorage) ->
+            deliveryStorage.take()
+        }
+    }
 
     fun newDelivery(deliveryNote: DeliveryNote) {
-        deliveryStorage.upsert(deliveryNote)
+        return transactor.perform { (deliveryStorage) ->
+            deliveryStorage.upsert(deliveryNote)
+        }
     }
 
     fun delivered(deliveryId: DeliveryId) {
-        val delivery = deliveryStorage.get(deliveryId) ?: error("Implement me!")
-        deliveryStorage.upsert(delivery.delivered())
-        notifyDelivered(delivery)
+        transactor.perform { (deliveryStorage, notifyDelivered) ->
+            val delivery = deliveryStorage.get(deliveryId) ?: error("Implement me!")
+            deliveryStorage.upsert(delivery.delivered())
+            notifyDelivered(delivery)
+        }
     }
 }
 

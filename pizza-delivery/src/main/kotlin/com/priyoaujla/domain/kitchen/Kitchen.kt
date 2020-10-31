@@ -4,23 +4,31 @@ import com.priyoaujla.domain.delivery.DeliveryNote
 import com.priyoaujla.domain.order.OrderId
 import com.priyoaujla.domain.order.OrderStatus
 import com.priyoaujla.domain.order.Orders
+import com.priyoaujla.transaction.Transactor
 import java.time.Clock
 
 class Kitchen(
-        private val ticketStorage: TicketStorage,
-        private val clock: Clock = Clock.systemUTC(),
-        private val notifyTicketComplete: NotifyTicketComplete
+    private val transactor: Transactor<Pair<TicketStorage, NotifyTicketComplete>>,
+    private val clock: Clock = Clock.systemUTC()
 ) {
 
-    fun createTicket(ticket: Ticket) = ticketStorage.add(ticket)
+    fun createTicket(ticket: Ticket) = transactor.perform { (ticketStorage) ->
+        ticketStorage.add(ticket)
+    }
 
-    fun tickets(): Set<Ticket> = ticketStorage.list()
+    fun tickets(): Set<Ticket> = transactor.perform { (ticketStorage) ->
+        ticketStorage.list()
+    }
 
-    fun nextTicket(): Ticket = ticketStorage.take()
+    fun nextTicket(): Ticket = transactor.perform { (ticketStorage) ->
+        ticketStorage.take()
+    }
 
     fun ticketComplete(ticket: Ticket) {
-        ticketStorage.update(ticket.copy(completedAt = clock.instant()))
-        notifyTicketComplete(ticket)
+        transactor.perform { (ticketStorage, notifyTicketComplete) ->
+            ticketStorage.update(ticket.copy(completedAt = clock.instant()))
+            notifyTicketComplete(ticket)
+        }
     }
 }
 
