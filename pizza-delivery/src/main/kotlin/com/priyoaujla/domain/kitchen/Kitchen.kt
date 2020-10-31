@@ -44,7 +44,7 @@ class NotifyTicketComplete(
 
 class CreateDelivery(private val orders: Orders, private val sendToDelivery: (DeliveryNote) -> Unit) : (Ticket) -> Unit {
     override fun invoke(ticket: Ticket) {
-        val order = orders.get(ticket.orderId) ?: error("Order not found")
+        val order = orders.findBy(ticket.orderId) ?: error("Order not found")
         sendToDelivery(DeliveryNote(orderId = ticket.orderId, menuItem = order.items, total = order.total))
     }
 }

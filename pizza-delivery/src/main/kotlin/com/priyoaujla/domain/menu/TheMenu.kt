@@ -1,15 +1,18 @@
 package com.priyoaujla.domain.menu
 
 import com.priyoaujla.domain.order.Money
+import com.priyoaujla.transaction.Transactor
 
 class TheMenu(
-    private val menuStorage: MenuStorage
+    private val transactor: Transactor<MenuStorage>
 ) {
 
-    fun fetch(): Menu = menuStorage.get()
+    fun fetch(): Menu = transactor.perform { menuStorage -> menuStorage.get() }
 
     fun createItem(item: Menu.Item, price: Money) {
-        menuStorage.add(item, price)
+        transactor.perform { menuStorage ->
+            menuStorage.add(item, price)
+        }
     }
 }
 

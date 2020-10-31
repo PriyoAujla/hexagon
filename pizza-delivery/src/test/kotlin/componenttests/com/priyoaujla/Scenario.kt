@@ -3,26 +3,25 @@ package componenttests.com.priyoaujla
 import com.priyoaujla.domain.delivery.*
 import com.priyoaujla.domain.kitchen.*
 import com.priyoaujla.domain.menu.Menu
-import com.priyoaujla.domain.menu.TheMenu
 import com.priyoaujla.domain.menu.MenuStorage
+import com.priyoaujla.domain.menu.TheMenu
 import com.priyoaujla.domain.order.*
 import com.priyoaujla.domain.order.payment.PaymentId
 import com.priyoaujla.domain.order.payment.PaymentType
 import com.priyoaujla.domain.order.payment.Paypal
-import com.priyoaujla.transaction.Transactor
 import componenttests.com.priyoaujla.TestData.Ingredients.basil
 import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
 import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
 import componenttests.com.priyoaujla.TestData.Ingredients.tomatoSauce
 import componenttests.com.priyoaujla.transaction.InMemoryTransactor
-import componenttests.com.priyoaujla.transaction.IsCloneable
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import java.util.*
 
 class Scenario {
 
-    private val menuHub = TheMenu(InMemoryMenuStorage())
+    private val menuStorage = InMemoryMenuStorage()
+    private val menuHub = TheMenu(InMemoryTransactor { menuStorage })
         .apply {
             TestData.minimalMenu.items.forEach {
                 this.createItem(it.item, it.price)
@@ -30,12 +29,7 @@ class Scenario {
         }
 
     private val orderStorage: InMemoryOrderStorage = InMemoryOrderStorage()
-
     private val orderStatusStorage = InMemoryOrderStatusStorage()
-
-    private val orderStorageTransactor: Transactor<OrderStorage> = InMemoryTransactor { orderStorage }
-
-    private val orders = Orders(orderStorageTransactor)
 
     private val startBaking: StartBaking = {
         kitchen.createTicket(toTicket(it))
@@ -49,27 +43,24 @@ class Scenario {
         )
     })
 
-    private val orderProgress = OrderProgress(orderStatusStorage)
-
     private val ticketStorage = InMemoryTicketStorage()
 
     private val kitchen = Kitchen(
         transactor = InMemoryTransactor {
             ticketStorage to NotifyTicketComplete(
-                updateOrderStatus = { orderId, status -> orderProgress.update(orderId, status) },
-                createDelivery = CreateDelivery(orders) { delivery.newDelivery(it) }
+                updateOrderStatus = { orderId, status -> OrderProgress(orderStatusStorage).update(orderId, status) },
+                createDelivery = CreateDelivery(Orders(orderStorage)) { delivery.newDelivery(it) }
             )
         })
 
 
     private val deliveryStorage = InMemoryDeliveryStorage()
-    private val notifyDelivered = NotifyDelivered { orderId, status ->
-        orderProgress.update(orderId, status)
-    }
 
     private val delivery = Delivery(
         transactor = InMemoryTransactor {
-            deliveryStorage to notifyDelivered
+            deliveryStorage to NotifyDelivered { orderId, status ->
+                OrderProgress(orderStatusStorage).update(orderId, status)
+            }
         }
     )
 
@@ -198,7 +189,7 @@ class FakePaypal : Paypal {
 
 class InMemoryTicketStorage(
     private val storage: MutableSet<Ticket> = mutableSetOf()
-) : TicketStorage, IsCloneable<InMemoryTicketStorage> {
+) : TicketStorage {
 
     override fun add(ticket: Ticket) {
         storage.add(ticket)
@@ -217,12 +208,11 @@ class InMemoryTicketStorage(
 
     override fun findBy(orderId: OrderId): Ticket? = storage.find { it.orderId == orderId }
 
-    override fun clone(): InMemoryTicketStorage = InMemoryTicketStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
 class InMemoryOrderStatusStorage(
     private val storage: MutableSet<OrderStatus> = mutableSetOf()
-) : OrderStatusStorage, IsCloneable<InMemoryOrderStatusStorage> {
+) : OrderStatusStorage {
 
     override fun upsert(orderStatus: OrderStatus) {
         storage.removeIf { it.id == orderStatus.id }
@@ -230,13 +220,11 @@ class InMemoryOrderStatusStorage(
     }
 
     override fun get(orderId: OrderId): OrderStatus? = storage.find { it.id == orderId }
-
-    override fun clone(): InMemoryOrderStatusStorage = InMemoryOrderStatusStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
 data class InMemoryOrderStorage(
     private val storage: MutableSet<Order> = mutableSetOf()
-) : OrderStorage, IsCloneable<InMemoryOrderStorage> {
+) : OrderStorage {
 
     override fun upsert(order: Order) {
         storage.removeIf { it.id == order.id }
@@ -245,12 +233,11 @@ data class InMemoryOrderStorage(
 
     override fun get(orderId: OrderId): Order? = storage.find { it.id == orderId }
 
-    override fun clone(): InMemoryOrderStorage = InMemoryOrderStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
 class InMemoryMenuStorage(
     private val storage: MutableSet<Menu.MenuItem> = mutableSetOf()
-) : MenuStorage, IsCloneable<InMemoryMenuStorage> {
+) : MenuStorage {
 
 
     override fun get(): Menu {
@@ -261,12 +248,11 @@ class InMemoryMenuStorage(
         storage.add(Menu.MenuItem(item, price))
     }
 
-    override fun clone(): InMemoryMenuStorage = InMemoryMenuStorage(mutableSetOf(*storage.toTypedArray()))
 }
 
 class InMemoryDeliveryStorage(
     private val storage: MutableMap<DeliveryId, DeliveryNote> = mutableMapOf<DeliveryId, DeliveryNote>()
-) : DeliveryStorage, IsCloneable<InMemoryDeliveryStorage> {
+) : DeliveryStorage {
 
     override fun get(id: DeliveryId): DeliveryNote? {
         return storage[id]
@@ -277,9 +263,6 @@ class InMemoryDeliveryStorage(
     }
 
     override fun take(): DeliveryNote = storage.toList().first().second
-
-    override fun clone(): InMemoryDeliveryStorage =
-        InMemoryDeliveryStorage(mutableMapOf(*storage.toList().toTypedArray()))
 }
 
 val cathyTheChef = UserDetails(
