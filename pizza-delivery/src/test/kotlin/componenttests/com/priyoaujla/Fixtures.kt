@@ -34,7 +34,7 @@ class CashOnDeliveryOrder(
     override val customer = scenario.newCustomer()
 
     override val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
-    val paymentId = customer.canPay(order, PaymentType.Paypal)
+    val paymentId = customer.canPay(order, PaymentType.Cash)
 }
 
 class HasFinishedCookingOrder(

@@ -7,6 +7,7 @@ import com.priyoaujla.domain.menu.MenuStorage
 import com.priyoaujla.domain.menu.TheMenu
 import com.priyoaujla.domain.order.*
 import com.priyoaujla.domain.order.payment.PaymentId
+import com.priyoaujla.domain.order.payment.PaymentInstructions
 import com.priyoaujla.domain.order.payment.PaymentType
 import com.priyoaujla.domain.order.payment.Paypal
 import componenttests.com.priyoaujla.TestData.Ingredients.basil
@@ -31,7 +32,7 @@ class Scenario {
     private val orderStorage: InMemoryOrderStorage = InMemoryOrderStorage()
     private val orderStatusStorage = InMemoryOrderStatusStorage()
 
-    private val startBaking: StartBaking = {
+    private val NotifyOrderComplete: NotifyOrderComplete = {
         kitchen.createTicket(toTicket(it))
     }
 
@@ -39,7 +40,7 @@ class Scenario {
         Triple(
             orderStorage,
             orderStatusStorage,
-            startBaking
+            NotifyOrderComplete
         )
     })
 
@@ -126,15 +127,33 @@ class CustomerRole(
         return order
     }
 
-    fun canPay(order: Order, paymentType: PaymentType) {
-        val paymentInstructions = ordering.payment(paymentType, order)
-        val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
-        ordering.paymentConfirmed(paymentInstructions.order.id, paymentId)
+    fun canPay(order: Order, paymentType: PaymentType): PaymentId? {
+        return when(val paymentInstructions = ordering.payment(paymentType, order)) {
+            is PaymentInstructions.RedirectToPaypal -> {
+                val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
+                ordering.paymentConfirmed(paymentInstructions.order.id, paymentId)
+                paymentId
+            }
+            is PaymentInstructions.NoInstructions -> null
+        }
+    }
+
+    fun canSeeOrderDetails(orderId: OrderId, expectedOrderDetails: OrderDetails) {
+        val order = ordering.retrieve(orderId)
+        assertEquals(expectedOrderDetails.items, order?.items)
+        assertEquals(expectedOrderDetails.total, order?.total)
+        assertEquals(expectedOrderDetails.paymentStatus, order?.paymentStatus)
     }
 
     fun canSeeOrderStatus(orderId: OrderId, status: OrderStatus.Status) {
         assertEquals(status, trackOrder.statusOf(orderId)?.status)
     }
+
+    data class OrderDetails(
+        val items: List<Menu.MenuItem> = emptyList(),
+        val total: Money,
+        val paymentStatus: PaymentStatus = PaymentStatus.PaymentRequired
+    )
 }
 
 object TestData {

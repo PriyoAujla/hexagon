@@ -8,7 +8,7 @@ import com.priyoaujla.domain.order.payment.PaymentType
 import com.priyoaujla.transaction.Transactor
 
 class Ordering(
-    private val transactor: Transactor<Triple<OrderStorage, OrderStatusStorage, StartBaking>>
+    private val transactor: Transactor<Triple<OrderStorage, OrderStatusStorage, NotifyOrderComplete>>
 ) {
 
     fun order(items: List<Menu.MenuItem>): Order {
@@ -33,24 +33,29 @@ class Ordering(
     }
 
     fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
-        return when(paymentType) {
+        return when (paymentType) {
             PaymentType.Paypal -> PaymentInstructions.RedirectToPaypal(order)
-            PaymentType.Cash -> PaymentInstructions.NoInstructions(order)
+            PaymentType.Cash -> {
+                transactor.perform { (_, _, notifyOrderComplete) ->
+                    notifyOrderComplete(order)
+                    PaymentInstructions.NoInstructions(order)
+                }
+            }
         }
     }
 
     fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
-        transactor.perform { (orderStorage, orderStatusStorage, startBaking) ->
+        transactor.perform { (orderStorage, orderStatusStorage, notifyOrderComplete) ->
             val order = orderStorage.get(orderId)
             order?.let {
-                orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.Paid))
-                startBaking(order)
+                orderStorage.upsert(it.paid(paymentId))
+                notifyOrderComplete(order)
             } ?: error("")
         }
     }
 
 }
 
-typealias StartBaking = (Order) -> Unit
+typealias NotifyOrderComplete = (Order) -> Unit
 
 fun toTicket(order: Order): Ticket = Ticket(order.id, order.items.map { it.item })

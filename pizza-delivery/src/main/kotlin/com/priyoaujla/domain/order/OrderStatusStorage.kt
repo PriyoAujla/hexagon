@@ -8,6 +8,6 @@ interface OrderStatusStorage {
 
 data class OrderStatus(val id: OrderId, val status: Status) {
     enum class Status {
-        New, Paid, Cooked, Delivered
+        New, Cooked, Delivered
     }
 }
