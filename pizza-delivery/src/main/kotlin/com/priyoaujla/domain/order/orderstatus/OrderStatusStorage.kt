@@ -1,4 +1,6 @@
-package com.priyoaujla.domain.order
+package com.priyoaujla.domain.order.orderstatus
+
+import com.priyoaujla.domain.order.OrderId
 
 interface OrderStatusStorage {
     fun upsert(orderStatus: OrderStatus)

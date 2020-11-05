@@ -1,6 +1,6 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.domain.order.OrderStatus
+import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import org.junit.jupiter.api.Test
 
 class PizzaDeliveryTest {

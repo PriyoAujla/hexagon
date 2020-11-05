@@ -2,6 +2,8 @@ package com.priyoaujla.domain.order
 
 import com.priyoaujla.domain.kitchen.Ticket
 import com.priyoaujla.domain.menu.Menu
+import com.priyoaujla.domain.order.orderstatus.OrderStatus
+import com.priyoaujla.domain.order.orderstatus.OrderStatusStorage
 import com.priyoaujla.domain.order.payment.PaymentId
 import com.priyoaujla.domain.order.payment.PaymentInstructions
 import com.priyoaujla.domain.order.payment.PaymentType
@@ -20,7 +22,12 @@ class Ordering(
         }
         transactor.perform { (orderStorage, orderStatusStorage) ->
             orderStorage.upsert(order)
-            orderStatusStorage.upsert(OrderStatus(order.id, OrderStatus.Status.New))
+            orderStatusStorage.upsert(
+                OrderStatus(
+                    order.id,
+                    OrderStatus.Status.New
+                )
+            )
         }
 
         return order

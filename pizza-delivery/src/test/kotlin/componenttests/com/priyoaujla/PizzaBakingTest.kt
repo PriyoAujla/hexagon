@@ -1,6 +1,6 @@
 package componenttests.com.priyoaujla
 
-import com.priyoaujla.domain.order.OrderStatus
+import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import com.priyoaujla.domain.order.toTicket
 import org.junit.jupiter.api.Test
 

@@ -1,9 +1,9 @@
 package com.priyoaujla.domain.kitchen
 
 import com.priyoaujla.domain.delivery.DeliveryNote
+import com.priyoaujla.domain.order.OrderFinder
 import com.priyoaujla.domain.order.OrderId
-import com.priyoaujla.domain.order.OrderStatus
-import com.priyoaujla.domain.order.Orders
+import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import com.priyoaujla.domain.order.PaymentStatus
 import com.priyoaujla.transaction.Transactor
 import java.time.Clock
@@ -34,8 +34,8 @@ class Kitchen(
 }
 
 class NotifyTicketComplete(
-        val updateOrderStatus: (OrderId, OrderStatus.Status) -> Unit,
-        val createDelivery: CreateDelivery
+    val updateOrderStatus: (OrderId, OrderStatus.Status) -> Unit,
+    val createDelivery: CreateDelivery
 ) : (Ticket) -> Unit {
     override fun invoke(ticket: Ticket) {
         updateOrderStatus(ticket.orderId, OrderStatus.Status.Cooked)
@@ -43,9 +43,9 @@ class NotifyTicketComplete(
     }
 }
 
-class CreateDelivery(private val orders: Orders, private val sendToDelivery: (DeliveryNote) -> Unit) : (Ticket) -> Unit {
+class CreateDelivery(private val orderFinder: OrderFinder, private val sendToDelivery: (DeliveryNote) -> Unit) : (Ticket) -> Unit {
     override fun invoke(ticket: Ticket) {
-        val order = orders.findBy(ticket.orderId) ?: error("Order not found")
+        val order = orderFinder.get(ticket.orderId) ?: error("Order not found")
         sendToDelivery(DeliveryNote(
             orderId = ticket.orderId,
             menuItem = order.items,

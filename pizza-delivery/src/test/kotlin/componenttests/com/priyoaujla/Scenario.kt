@@ -6,6 +6,10 @@ import com.priyoaujla.domain.menu.Menu
 import com.priyoaujla.domain.menu.MenuStorage
 import com.priyoaujla.domain.menu.TheMenu
 import com.priyoaujla.domain.order.*
+import com.priyoaujla.domain.order.orderstatus.OrderProgress
+import com.priyoaujla.domain.order.orderstatus.OrderStatus
+import com.priyoaujla.domain.order.orderstatus.OrderStatusStorage
+import com.priyoaujla.domain.order.orderstatus.OrderTracking
 import com.priyoaujla.domain.order.payment.PaymentId
 import com.priyoaujla.domain.order.payment.PaymentInstructions
 import com.priyoaujla.domain.order.payment.PaymentType
@@ -49,8 +53,10 @@ class Scenario {
     private val kitchen = Kitchen(
         transactor = InMemoryTransactor {
             ticketStorage to NotifyTicketComplete(
-                updateOrderStatus = { orderId, status -> OrderProgress(orderStatusStorage).update(orderId, status) },
-                createDelivery = CreateDelivery(Orders(orderStorage)) { delivery.newDelivery(it) }
+                updateOrderStatus = { orderId, status -> OrderProgress(
+                    orderStatusStorage
+                ).update(orderId, status) },
+                createDelivery = CreateDelivery(orderStorage) { delivery.newDelivery(it) }
             )
         })
 
@@ -60,12 +66,14 @@ class Scenario {
     private val delivery = Delivery(
         transactor = InMemoryTransactor {
             deliveryStorage to NotifyDelivered { orderId, status ->
-                OrderProgress(orderStatusStorage).update(orderId, status)
+                OrderProgress(orderStatusStorage)
+                    .update(orderId, status)
             }
         }
     )
 
-    private val trackingOrder = OrderTracking(orderStatusStorage)
+    private val trackingOrder =
+        OrderTracking(orderStatusStorage)
 
     private val paypal = FakePaypal()
 

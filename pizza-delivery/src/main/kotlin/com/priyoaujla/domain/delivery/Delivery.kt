@@ -1,6 +1,7 @@
 package com.priyoaujla.domain.delivery
 
 import com.priyoaujla.domain.order.*
+import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import com.priyoaujla.transaction.Transactor
 
 class Delivery(
