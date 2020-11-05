@@ -1,7 +1,6 @@
 package componenttests.com.priyoaujla
 
 import com.priyoaujla.domain.order.Money
-import com.priyoaujla.domain.order.OrderStatus
 import com.priyoaujla.domain.order.PaymentStatus
 import com.priyoaujla.domain.order.payment.PaymentType
 import componenttests.com.priyoaujla.TestData.minimalMenu
@@ -13,10 +12,10 @@ class PizzaOrderingTests {
     private val customer = scenario.newCustomer()
 
     @Test
-    fun `customer can order and pay`() {
+    fun `customer can order and pay with paypal`() {
         val items = minimalMenu.items.toList() + minimalMenu.items
         val order = customer.canOrder(items, Money(17.96))
-        val paymentId = customer.canPay(order, PaymentType.Paypal)
+        val paymentId = customer.canPayForOrder(order, PaymentType.Paypal)
         customer.canSeeOrderDetails(order.id, CustomerRole.OrderDetails(
             items = order.items,
             total = Money(17.96),
@@ -28,7 +27,7 @@ class PizzaOrderingTests {
     fun `customer can order and choose to pay on delivery`() {
         val items = minimalMenu.items.toList() + minimalMenu.items
         val order = customer.canOrder(items, Money(17.96))
-        customer.canPay(order, PaymentType.Cash)
+        customer.canPayForOrder(order, PaymentType.Cash)
         customer.canSeeOrderDetails(order.id, CustomerRole.OrderDetails(
             items = order.items,
             total = Money(17.96),

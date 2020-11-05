@@ -21,8 +21,24 @@ class Delivery(
     fun delivered(deliveryId: DeliveryId) {
         transactor.perform { (deliveryStorage, notifyDelivered) ->
             val delivery = deliveryStorage.get(deliveryId) ?: error("Implement me!")
-            deliveryStorage.upsert(delivery.delivered())
-            notifyDelivered(delivery)
+            if(delivery.hasPaidFor()) {
+                deliveryStorage.upsert(delivery.delivered())
+                notifyDelivered(delivery)
+            } else {
+                error("Payment required!")
+            }
+        }
+    }
+
+    private fun DeliveryNote.hasPaidFor() =
+        paymentStatus == DeliveryNote.PaymentStatus.Paid
+
+    fun acceptedPaymentFor(deliveryId: DeliveryId) {
+        transactor.perform { (deliveryStorage) ->
+            val deliveryNote = deliveryStorage.get(deliveryId)
+            deliveryNote?.let {
+                deliveryStorage.upsert(it.paid())
+            } ?: error("")
         }
     }
 }

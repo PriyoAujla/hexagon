@@ -45,11 +45,11 @@ class Ordering(
     }
 
     fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
-        transactor.perform { (orderStorage, orderStatusStorage, notifyOrderComplete) ->
+        transactor.perform { (orderStorage, orderStatusStorage, startBaking) ->
             val order = orderStorage.get(orderId)
             order?.let {
                 orderStorage.upsert(it.paid(paymentId))
-                notifyOrderComplete(order)
+                startBaking(order)
             } ?: error("")
         }
     }

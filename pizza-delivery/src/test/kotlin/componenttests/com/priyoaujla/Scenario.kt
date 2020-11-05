@@ -65,7 +65,7 @@ class Scenario {
         }
     )
 
-    private val trackingOrder = TrackOrder(orderStatusStorage)
+    private val trackingOrder = OrderTracking(orderStatusStorage)
 
     private val paypal = FakePaypal()
 
@@ -93,6 +93,10 @@ class CourierRole(
     fun hasDelivered(delivery: DeliveryNote) {
         this.delivery.delivered(delivery.id)
     }
+
+    fun canMarkDeliveryAsPaid(deliveryId: DeliveryId) {
+        delivery.acceptedPaymentFor(deliveryId)
+    }
 }
 
 class ChefRole(
@@ -113,7 +117,7 @@ class CustomerRole(
     private val theMenu: TheMenu,
     private val ordering: Ordering,
     private val paypal: Paypal,
-    private val trackOrder: TrackOrder
+    private val orderTracking: OrderTracking
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
@@ -127,7 +131,7 @@ class CustomerRole(
         return order
     }
 
-    fun canPay(order: Order, paymentType: PaymentType): PaymentId? {
+    fun canPayForOrder(order: Order, paymentType: PaymentType): PaymentId? {
         return when(val paymentInstructions = ordering.payment(paymentType, order)) {
             is PaymentInstructions.RedirectToPaypal -> {
                 val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
@@ -146,7 +150,7 @@ class CustomerRole(
     }
 
     fun canSeeOrderStatus(orderId: OrderId, status: OrderStatus.Status) {
-        assertEquals(status, trackOrder.statusOf(orderId)?.status)
+        assertEquals(status, orderTracking.of(orderId)?.status)
     }
 
     data class OrderDetails(

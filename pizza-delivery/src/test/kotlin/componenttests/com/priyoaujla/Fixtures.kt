@@ -24,7 +24,9 @@ class PaypalPaidOrder(
     override val customer = scenario.newCustomer()
 
     override val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
-    val paymentId = customer.canPay(order, PaymentType.Cash)
+        .also {
+            customer.canPayForOrder(it, PaymentType.Paypal)
+        }
 }
 
 class CashOnDeliveryOrder(
@@ -34,10 +36,12 @@ class CashOnDeliveryOrder(
     override val customer = scenario.newCustomer()
 
     override val order = customer.canOrder(items, items.fold(Money(0.0)){ total, item -> total + item.price})
-    val paymentId = customer.canPay(order, PaymentType.Cash)
+        .also {
+            customer.canPayForOrder(it, PaymentType.Cash)
+        }
 }
 
-class HasFinishedCookingOrder(
+class HasOrderWaitingDelivery(
         scenario: Scenario,
         private val withOrder: OrderSteps = PaypalPaidOrder(scenario, TestData.minimalMenu.items.toList() + TestData.minimalMenu.items)
 ) {

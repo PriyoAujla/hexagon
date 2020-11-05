@@ -3,6 +3,7 @@ package com.priyoaujla.domain.delivery
 import com.priyoaujla.domain.menu.Menu
 import com.priyoaujla.domain.order.Money
 import com.priyoaujla.domain.order.OrderId
+import com.sun.org.apache.xpath.internal.operations.Bool
 import java.util.*
 
 data class DeliveryNote(
@@ -10,14 +11,25 @@ data class DeliveryNote(
         val orderId: OrderId,
         val menuItem: List<Menu.MenuItem>,
         val total: Money,
-        val state: DeliveryState = DeliveryState.AwaitingDelivery
+        val state: DeliveryState = DeliveryState.AwaitingDelivery,
+        val paymentStatus: PaymentStatus
 ) {
+    enum class PaymentStatus {
+        Paid, PaymentRequired
+    }
 
     enum class DeliveryState {
         AwaitingDelivery, Delivered
     }
 
     fun delivered() = copy(state = DeliveryState.Delivered)
+    fun paid(): DeliveryNote {
+        if(paymentStatus == PaymentStatus.PaymentRequired) {
+            return copy(paymentStatus = PaymentStatus.Paid)
+        } else {
+            error("")
+        }
+    }
 }
 
 data class DeliveryId(val uuid: UUID){

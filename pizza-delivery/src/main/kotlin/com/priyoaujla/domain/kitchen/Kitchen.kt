@@ -4,6 +4,7 @@ import com.priyoaujla.domain.delivery.DeliveryNote
 import com.priyoaujla.domain.order.OrderId
 import com.priyoaujla.domain.order.OrderStatus
 import com.priyoaujla.domain.order.Orders
+import com.priyoaujla.domain.order.PaymentStatus
 import com.priyoaujla.transaction.Transactor
 import java.time.Clock
 
@@ -45,6 +46,14 @@ class NotifyTicketComplete(
 class CreateDelivery(private val orders: Orders, private val sendToDelivery: (DeliveryNote) -> Unit) : (Ticket) -> Unit {
     override fun invoke(ticket: Ticket) {
         val order = orders.findBy(ticket.orderId) ?: error("Order not found")
-        sendToDelivery(DeliveryNote(orderId = ticket.orderId, menuItem = order.items, total = order.total))
+        sendToDelivery(DeliveryNote(
+            orderId = ticket.orderId,
+            menuItem = order.items,
+            total = order.total,
+            paymentStatus = when(order.paymentStatus) {
+                is PaymentStatus.PaymentRequired -> DeliveryNote.PaymentStatus.PaymentRequired
+                is PaymentStatus.Paid -> DeliveryNote.PaymentStatus.Paid
+            }
+        ))
     }
 }
