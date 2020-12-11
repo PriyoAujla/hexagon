@@ -4,7 +4,6 @@ import com.priyoaujla.domain.menu.Menu
 import com.priyoaujla.domain.order.Money
 import com.priyoaujla.domain.order.Order
 import com.priyoaujla.domain.order.payment.PaymentType
-import com.priyoaujla.domain.order.toTicket
 
 fun thereAreTwoPaidOrders(scenario: Scenario) =
         PaypalPaidOrder(scenario) to PaypalPaidOrder(
@@ -53,6 +52,8 @@ class HasOrderWaitingDelivery(
     val courier = scenario.newCourier()
 
     init {
-        chef.canFinishCooking(toTicket(order))
+        chef.canPickupNextTicket().also {
+            chef.canFinishCooking(it)
+        }
     }
 }

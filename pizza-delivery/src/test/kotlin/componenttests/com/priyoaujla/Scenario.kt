@@ -9,7 +9,6 @@ import com.priyoaujla.domain.order.*
 import com.priyoaujla.domain.order.orderstatus.OrderProgress
 import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import com.priyoaujla.domain.order.orderstatus.OrderStatusStorage
-import com.priyoaujla.domain.order.orderstatus.OrderTracking
 import com.priyoaujla.domain.order.payment.PaymentId
 import com.priyoaujla.domain.order.payment.PaymentInstructions
 import com.priyoaujla.domain.order.payment.PaymentType
@@ -19,8 +18,7 @@ import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
 import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
 import componenttests.com.priyoaujla.TestData.Ingredients.tomatoSauce
 import componenttests.com.priyoaujla.transaction.InMemoryTransactor
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.*
 import java.util.*
 
 class Scenario {
@@ -72,13 +70,10 @@ class Scenario {
         }
     )
 
-    private val trackingOrder =
-        OrderTracking(orderStatusStorage)
-
     private val paypal = FakePaypal()
 
     fun newCustomer(): CustomerRole =
-        CustomerRole(menuHub, ordering, paypal, trackingOrder)
+        CustomerRole(menuHub, ordering, paypal, orderStatusStorage)
 
     fun newChef(): ChefRole =
         ChefRole(kitchen)
@@ -111,8 +106,10 @@ class ChefRole(
     private val kitchen: Kitchen
 ) {
 
-    fun canPickupNextTicket(ticket: Ticket) {
-        assertEquals(ticket, kitchen.nextTicket())
+    fun canPickupNextTicket(): Ticket {
+        val nextTicket = kitchen.nextTicket()
+        assertNotNull(nextTicket)
+        return nextTicket
     }
 
     fun canFinishCooking(ticket: Ticket) {
@@ -125,7 +122,7 @@ class CustomerRole(
     private val theMenu: TheMenu,
     private val ordering: Ordering,
     private val paypal: Paypal,
-    private val orderTracking: OrderTracking
+    private val orderStatusStorage: OrderStatusStorage
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
@@ -158,7 +155,7 @@ class CustomerRole(
     }
 
     fun canSeeOrderStatus(orderId: OrderId, status: OrderStatus.Status) {
-        assertEquals(status, orderTracking.of(orderId)?.status)
+        assertEquals(status, orderStatusStorage.get(orderId)?.status)
     }
 
     data class OrderDetails(

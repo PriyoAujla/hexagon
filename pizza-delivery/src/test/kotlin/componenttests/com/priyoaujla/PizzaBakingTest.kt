@@ -1,7 +1,6 @@
 package componenttests.com.priyoaujla
 
 import com.priyoaujla.domain.order.orderstatus.OrderStatus
-import com.priyoaujla.domain.order.toTicket
 import org.junit.jupiter.api.Test
 
 class PizzaBakingTest {
@@ -11,26 +10,27 @@ class PizzaBakingTest {
 
     @Test
     fun `once an order is paid for the kitchen will pick up the first ticket received`() = thereAreTwoPaidOrders(scenario).runTest {
-        val (first, _) = this
-        chef.canPickupNextTicket(toTicket(first.order))
+        chef.canPickupNextTicket()
     }
 
     @Test
     fun `the kitchen can update the ticket once cooking is finished and proceed to the next ticket`() = thereAreTwoPaidOrders(scenario).runTest {
-        val (first, second) = this
+        val (firstPaypalOrder, secondPaypalOrder) = this
 
-        val firstCustomer = first.customer
-        val firstTicket = toTicket(first.order)
+        val firstCustomer = firstPaypalOrder.customer
+        val secondCustomer = secondPaypalOrder.customer
 
-        val secondCustomer = second.customer
-        val secondTicket = toTicket(second.order)
+        chef.canPickupNextTicket().also {
+            chef.canFinishCooking(it)
+            firstCustomer.canSeeOrderStatus(firstPaypalOrder.order.id, OrderStatus.Status.Cooked)
+            secondCustomer.canSeeOrderStatus(secondPaypalOrder.order.id, OrderStatus.Status.New)
+        }
 
-        chef.canFinishCooking(firstTicket)
-        firstCustomer.canSeeOrderStatus(firstTicket.orderId, OrderStatus.Status.Cooked)
-
-        chef.canPickupNextTicket(secondTicket)
-        chef.canFinishCooking(secondTicket)
-        secondCustomer.canSeeOrderStatus(firstTicket.orderId, OrderStatus.Status.Cooked)
+        chef.canPickupNextTicket().also {
+            chef.canFinishCooking(it)
+            firstCustomer.canSeeOrderStatus(firstPaypalOrder.order.id, OrderStatus.Status.Cooked)
+            secondCustomer.canSeeOrderStatus(secondPaypalOrder.order.id, OrderStatus.Status.Cooked)
+        }
     }
 }
 

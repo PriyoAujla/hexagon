@@ -3,7 +3,6 @@ package com.priyoaujla.domain.delivery
 import com.priyoaujla.domain.menu.Menu
 import com.priyoaujla.domain.order.Money
 import com.priyoaujla.domain.order.OrderId
-import com.sun.org.apache.xpath.internal.operations.Bool
 import java.util.*
 
 data class DeliveryNote(

@@ -1,6 +1,6 @@
 package com.priyoaujla.domain.delivery
 
-import com.priyoaujla.domain.order.*
+import com.priyoaujla.domain.order.OrderId
 import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import com.priyoaujla.transaction.Transactor
 
@@ -22,7 +22,7 @@ class Delivery(
     fun delivered(deliveryId: DeliveryId) {
         transactor.perform { (deliveryStorage, notifyDelivered) ->
             val delivery = deliveryStorage.get(deliveryId) ?: error("Implement me!")
-            if(delivery.hasPaidFor()) {
+            if(delivery.isPaid()) {
                 deliveryStorage.upsert(delivery.delivered())
                 notifyDelivered(delivery)
             } else {
@@ -31,7 +31,7 @@ class Delivery(
         }
     }
 
-    private fun DeliveryNote.hasPaidFor() =
+    private fun DeliveryNote.isPaid() =
         paymentStatus == DeliveryNote.PaymentStatus.Paid
 
     fun acceptedPaymentFor(deliveryId: DeliveryId) {
