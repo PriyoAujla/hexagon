@@ -2,6 +2,7 @@ package com.priyoaujla.domain.order
 
 import com.priyoaujla.domain.kitchen.Ticket
 import com.priyoaujla.domain.menu.Menu
+import com.priyoaujla.domain.order.Money.Companion.ZERO
 import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import com.priyoaujla.domain.order.orderstatus.OrderStatusStorage
 import com.priyoaujla.domain.order.payment.PaymentId
@@ -14,11 +15,8 @@ class Ordering(
 ) {
 
     fun order(items: List<Menu.MenuItem>): Order {
-        val order = items.fold(Order(total = Money(0.0))) { order, menuItem ->
-            order.copy(
-                total = order.total + menuItem.price,
-                items = order.items + menuItem
-            )
+        val order = items.fold(Order(total = ZERO)) { order, menuItem ->
+            order.addItem(menuItem)
         }
         transactor.perform { (orderStorage, orderStatusStorage) ->
             orderStorage.upsert(order)
@@ -52,7 +50,7 @@ class Ordering(
     }
 
     fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
-        transactor.perform { (orderStorage, orderStatusStorage, startBaking) ->
+        transactor.perform { (orderStorage, _, startBaking) ->
             val order = orderStorage.get(orderId)
             order?.let {
                 orderStorage.upsert(it.paid(paymentId))

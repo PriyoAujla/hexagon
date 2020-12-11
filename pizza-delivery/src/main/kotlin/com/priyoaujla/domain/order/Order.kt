@@ -12,6 +12,10 @@ data class Order(
 ) {
     fun paid(paymentId: PaymentId): Order = copy(paymentStatus = PaymentStatus.Paid(paymentId))
 
+    fun addItem(menuItem: Menu.MenuItem): Order = copy(
+        total = total + menuItem.price,
+        items = items + menuItem
+    )
 }
 
 sealed class PaymentStatus {
