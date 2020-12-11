@@ -3,7 +3,7 @@ package componenttests.com.priyoaujla
 import com.priyoaujla.domain.order.orderstatus.OrderStatus
 import org.junit.jupiter.api.Test
 
-class PizzaDeliveryTest {
+class DeliveryTest {
 
     private val scenario = Scenario()
 

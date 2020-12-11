@@ -52,7 +52,7 @@ class HasOrderWaitingDelivery(
     val courier = scenario.newCourier()
 
     init {
-        chef.canPickupNextTicket().also {
+        chef.canPickupNextTicket(order).also {
             chef.canFinishCooking(it)
         }
     }

@@ -6,7 +6,7 @@ import com.priyoaujla.domain.order.payment.PaymentType
 import componenttests.com.priyoaujla.TestData.minimalMenu
 import org.junit.jupiter.api.Test
 
-class PizzaOrderingTests {
+class OrderingTests {
 
     private val scenario = Scenario()
     private val customer = scenario.newCustomer()

@@ -85,6 +85,7 @@ class Scenario {
 class CourierRole(
     private val delivery: Delivery
 ) {
+
     fun theNextDeliveryIs(order: Order): DeliveryNote {
         val nextOrderToDeliver = delivery.nextDelivery()
         assertEquals(nextOrderToDeliver.orderId, order.id)
@@ -106,9 +107,11 @@ class ChefRole(
     private val kitchen: Kitchen
 ) {
 
-    fun canPickupNextTicket(): Ticket {
+    fun canPickupNextTicket(forOrder: Order): Ticket {
         val nextTicket = kitchen.nextTicket()
         assertNotNull(nextTicket)
+        assertEquals(nextTicket.orderId, forOrder.id)
+        assertEquals(nextTicket.items, forOrder.items.map { it.item })
         return nextTicket
     }
 

@@ -3,7 +3,7 @@ package componenttests.com.priyoaujla
 import componenttests.com.priyoaujla.TestData.minimalMenu
 import org.junit.jupiter.api.Test
 
-class PizzaMenuTests {
+class MenuTests {
 
     private val scenario = Scenario()
     private val customer = scenario.newCustomer()
