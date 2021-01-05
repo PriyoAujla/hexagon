@@ -5,7 +5,7 @@ import com.priyoaujla.domain.components.order.Money
 import com.priyoaujla.domain.components.order.Order
 import com.priyoaujla.domain.components.order.payment.PaymentType
 
-class TwoSeparatedPaidOrdersScenario(theSystem: TheSystem) {
+class TwoSeparatePaidOrdersScenario(theSystem: TheSystem) {
     private val pair = PaypalPaidScenario(theSystem) to PaypalPaidScenario(
         theSystem,
         TestData.minimalMenu.items.take(1)
