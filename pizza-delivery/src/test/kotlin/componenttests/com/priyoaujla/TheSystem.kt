@@ -21,7 +21,7 @@ import componenttests.com.priyoaujla.transaction.InMemoryTransactor
 import org.junit.jupiter.api.Assertions.*
 import java.util.*
 
-class System {
+class TheSystem {
 
     private val menuStorage = InMemoryMenuStorage()
     private val menuHub = TheMenu(InMemoryTransactor { menuStorage })

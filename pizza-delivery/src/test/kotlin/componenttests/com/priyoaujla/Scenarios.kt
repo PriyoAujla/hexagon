@@ -5,9 +5,9 @@ import com.priyoaujla.domain.components.order.Money
 import com.priyoaujla.domain.components.order.Order
 import com.priyoaujla.domain.components.order.payment.PaymentType
 
-class TwoSeparatedPaidOrdersScenario(system: System) {
-    private val pair = PaypalPaidScenario(system) to PaypalPaidScenario(
-        system,
+class TwoSeparatedPaidOrdersScenario(theSystem: TheSystem) {
+    private val pair = PaypalPaidScenario(theSystem) to PaypalPaidScenario(
+        theSystem,
         TestData.minimalMenu.items.take(1)
     )
 
@@ -29,27 +29,27 @@ abstract class OrderScenario {
 }
 
 class PaypalPaidScenario(
-    system: System,
+    theSystem: TheSystem,
     items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
 ) : OrderScenario() {
-    override val customer = system.newCustomer()
+    override val customer = theSystem.newCustomer()
 
     override val order = createOrder(items, PaymentType.Paypal)
 }
 
 class CashOnDeliveryScenario(
-    system: System,
+    theSystem: TheSystem,
     items: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
 ) : OrderScenario() {
-    override val customer = system.newCustomer()
+    override val customer = theSystem.newCustomer()
 
     override val order = createOrder(items, PaymentType.Cash)
 }
 
 class OrderWaitingDeliveryScenario(
-    system: System,
+    theSystem: TheSystem,
     private val using: OrderScenario = PaypalPaidScenario(
-        system,
+        theSystem,
         TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
     )
 ) {
@@ -57,8 +57,8 @@ class OrderWaitingDeliveryScenario(
     val customer get() = using.customer
     val order get() = using.order
 
-    val chef = system.newChef()
-    val courier = system.newCourier()
+    val chef = theSystem.newChef()
+    val courier = theSystem.newCourier()
 
     init {
         chef.canPickupNextTicket(order).also {

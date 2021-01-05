@@ -1,13 +1,13 @@
 package componenttests.com.priyoaujla.domain.components
 
-import componenttests.com.priyoaujla.System
 import componenttests.com.priyoaujla.TestData.minimalMenu
+import componenttests.com.priyoaujla.TheSystem
 import org.junit.jupiter.api.Test
 
 class MenuTests {
 
-    private val scenario = System()
-    private val customer = scenario.newCustomer()
+    private val theSystem = TheSystem()
+    private val customer = theSystem.newCustomer()
 
     @Test
     fun `customer can view the menu`() {
