@@ -1,10 +1,10 @@
-package componenttests.com.priyoaujla.domain.components
+package systemtests.com.priyoaujla.domain.components
 
 import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
-import componenttests.com.priyoaujla.TheSystem
-import componenttests.com.priyoaujla.TwoSeparatePaidOrdersScenario
-import componenttests.com.priyoaujla.runTest
 import org.junit.jupiter.api.Test
+import systemtests.com.priyoaujla.TheSystem
+import systemtests.com.priyoaujla.TwoSeparatePaidOrdersScenario
+import systemtests.com.priyoaujla.runTest
 
 class KitchenTest {
 

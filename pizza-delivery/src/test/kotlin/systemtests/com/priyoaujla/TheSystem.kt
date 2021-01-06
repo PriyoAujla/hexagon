@@ -1,4 +1,4 @@
-package componenttests.com.priyoaujla
+package systemtests.com.priyoaujla
 
 import com.priyoaujla.domain.components.delivery.*
 import com.priyoaujla.domain.components.kitchen.*
@@ -13,12 +13,12 @@ import com.priyoaujla.domain.components.order.payment.PaymentId
 import com.priyoaujla.domain.components.order.payment.PaymentInstructions
 import com.priyoaujla.domain.components.order.payment.PaymentType
 import com.priyoaujla.domain.components.order.payment.Paypal
-import componenttests.com.priyoaujla.TestData.Ingredients.basil
-import componenttests.com.priyoaujla.TestData.Ingredients.mozzarella
-import componenttests.com.priyoaujla.TestData.Ingredients.pizzaDough
-import componenttests.com.priyoaujla.TestData.Ingredients.tomatoSauce
-import componenttests.com.priyoaujla.transaction.InMemoryTransactor
 import org.junit.jupiter.api.Assertions.*
+import systemtests.com.priyoaujla.TestData.Ingredients.basil
+import systemtests.com.priyoaujla.TestData.Ingredients.mozzarella
+import systemtests.com.priyoaujla.TestData.Ingredients.pizzaDough
+import systemtests.com.priyoaujla.TestData.Ingredients.tomatoSauce
+import systemtests.com.priyoaujla.transaction.InMemoryTransactor
 import java.util.*
 
 class TheSystem {

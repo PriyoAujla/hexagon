@@ -1,4 +1,4 @@
-package componenttests.com.priyoaujla.transaction
+package systemtests.com.priyoaujla.transaction
 
 import com.priyoaujla.transaction.Transactor
 

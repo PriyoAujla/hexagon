@@ -1,12 +1,12 @@
-package componenttests.com.priyoaujla.domain.components
+package systemtests.com.priyoaujla.domain.components
 
 import com.priyoaujla.domain.components.order.Money
 import com.priyoaujla.domain.components.order.PaymentStatus
 import com.priyoaujla.domain.components.order.payment.PaymentType
-import componenttests.com.priyoaujla.CustomerRole
-import componenttests.com.priyoaujla.TestData.minimalMenu
-import componenttests.com.priyoaujla.TheSystem
 import org.junit.jupiter.api.Test
+import systemtests.com.priyoaujla.CustomerRole
+import systemtests.com.priyoaujla.TestData.minimalMenu
+import systemtests.com.priyoaujla.TheSystem
 
 class OrderTests {
 

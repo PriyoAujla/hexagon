@@ -1,4 +1,4 @@
-package componenttests.com.priyoaujla
+package systemtests.com.priyoaujla
 
 import com.priyoaujla.domain.components.menu.Menu
 import com.priyoaujla.domain.components.order.Money
@@ -46,7 +46,7 @@ class CashOnDeliveryScenario(
     override val order = createOrder(items, PaymentType.Cash)
 }
 
-class OrderWaitingDeliveryScenario(
+class OrderFinishedCookingScenario(
     theSystem: TheSystem,
     private val using: OrderScenario = PaypalPaidScenario(
         theSystem,
