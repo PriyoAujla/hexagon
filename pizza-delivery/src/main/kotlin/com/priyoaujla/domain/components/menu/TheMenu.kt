@@ -1,6 +1,6 @@
 package com.priyoaujla.domain.components.menu
 
-import com.priyoaujla.domain.components.order.Money
+import com.priyoaujla.domain.components.ordering.Money
 import com.priyoaujla.transaction.Transactor
 
 class TheMenu(

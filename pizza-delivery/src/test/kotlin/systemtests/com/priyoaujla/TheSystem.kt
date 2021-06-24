@@ -1,18 +1,22 @@
 package systemtests.com.priyoaujla
 
+import com.priyoaujla.domain.components.checkout.Basket
+import com.priyoaujla.domain.components.checkout.CustomerBasket
+import com.priyoaujla.domain.components.checkout.CustomerBasketStorage
+import com.priyoaujla.domain.components.checkout.CustomerId
 import com.priyoaujla.domain.components.delivery.*
 import com.priyoaujla.domain.components.kitchen.*
 import com.priyoaujla.domain.components.menu.Menu
 import com.priyoaujla.domain.components.menu.MenuStorage
 import com.priyoaujla.domain.components.menu.TheMenu
-import com.priyoaujla.domain.components.order.*
-import com.priyoaujla.domain.components.order.orderstatus.OrderProgress
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatusStorage
-import com.priyoaujla.domain.components.order.payment.PaymentId
-import com.priyoaujla.domain.components.order.payment.PaymentInstructions
-import com.priyoaujla.domain.components.order.payment.PaymentType
-import com.priyoaujla.domain.components.order.payment.Paypal
+import com.priyoaujla.domain.components.ordering.*
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderProgress
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatusStorage
+import com.priyoaujla.domain.components.ordering.payment.PaymentId
+import com.priyoaujla.domain.components.ordering.payment.PaymentInstructions
+import com.priyoaujla.domain.components.ordering.payment.PaymentType
+import com.priyoaujla.domain.components.ordering.payment.Paypal
 import org.junit.jupiter.api.Assertions.*
 import systemtests.com.priyoaujla.TestData.Ingredients.basil
 import systemtests.com.priyoaujla.TestData.Ingredients.mozzarella
@@ -34,7 +38,7 @@ class TheSystem {
     private val orderStorage: InMemoryOrderStorage = InMemoryOrderStorage()
     private val orderStatusStorage = InMemoryOrderStatusStorage()
 
-    private val NotifyOrderComplete: NotifyOrderComplete = {
+    private val notifyOrderComplete: NotifyOrderComplete = {
         kitchen.createTicket(toTicket(it))
     }
 
@@ -42,7 +46,7 @@ class TheSystem {
         Triple(
             orderStorage,
             orderStatusStorage,
-            NotifyOrderComplete
+            notifyOrderComplete
         )
     })
 
@@ -64,16 +68,23 @@ class TheSystem {
     private val delivery = Delivery(
         transactor = InMemoryTransactor {
             deliveryStorage to NotifyDelivered { orderId, status ->
-                OrderProgress(orderStatusStorage)
-                    .update(orderId, status)
+                OrderProgress(orderStatusStorage).update(orderId, status)
             }
         }
     )
 
     private val paypal = FakePaypal()
 
+    private val customerBasketStorage = InMemoryCustomerBasketStorage()
+
     fun newCustomer(): CustomerRole =
-        CustomerRole(menuHub, ordering, paypal, orderStatusStorage)
+        CustomerRole(
+            theMenu = menuHub,
+            ordering = ordering,
+            paypal = paypal,
+            orderStatusStorage = orderStatusStorage,
+            basket = Basket(InMemoryTransactor { customerBasketStorage })
+        )
 
     fun newChef(): ChefRole =
         ChefRole(kitchen)
@@ -122,10 +133,12 @@ class ChefRole(
 }
 
 class CustomerRole(
+    private val customerId: CustomerId = CustomerId.mint(),
     private val theMenu: TheMenu,
     private val ordering: Ordering,
     private val paypal: Paypal,
-    private val orderStatusStorage: OrderStatusStorage
+    private val orderStatusStorage: OrderStatusStorage,
+    private val basket: Basket
 ) {
 
     fun canSeeMenuWith(menuItems: Set<Menu.MenuItem>) {
@@ -150,15 +163,33 @@ class CustomerRole(
         }
     }
 
-    fun canSeeOrderDetails(orderId: OrderId, expectedOrderDetails: OrderDetails) {
+    fun canSeeOrderWithDetails(orderId: OrderId, expectedOrderDetails: OrderDetails) {
         val order = ordering.retrieve(orderId)
         assertEquals(expectedOrderDetails.items, order?.items)
         assertEquals(expectedOrderDetails.total, order?.total)
         assertEquals(expectedOrderDetails.paymentStatus, order?.paymentStatus)
     }
 
+    fun canSeeOrderWithDetails(expectedOrderDetails: OrderDetails) {
+        TODO("Not yet implemented")
+    }
+
     fun canSeeOrderStatus(orderId: OrderId, status: OrderStatus.Status) {
         assertEquals(status, orderStatusStorage.get(orderId)?.status)
+    }
+
+    fun canAddToBasket(items: List<Menu.MenuItem>) {
+        basket.add(customerId, items)
+    }
+
+    fun canSeeBasketHas(items: List<Menu.MenuItem>) {
+        val customerBasket = basket.fetch(customerId)
+        assertNotNull(customerBasket)
+        assertEquals(items, customerBasket?.items)
+    }
+
+    fun canPayForBasket(paypal: PaymentType): PaymentId? {
+        TODO("Not yet implemented")
     }
 
     data class OrderDetails(
@@ -282,7 +313,7 @@ class InMemoryMenuStorage(
 }
 
 class InMemoryDeliveryStorage(
-    private val storage: MutableMap<DeliveryId, DeliveryNote> = mutableMapOf<DeliveryId, DeliveryNote>()
+    private val storage: MutableMap<DeliveryId, DeliveryNote> = mutableMapOf()
 ) : DeliveryStorage {
 
     override fun get(id: DeliveryId): DeliveryNote? {
@@ -294,6 +325,18 @@ class InMemoryDeliveryStorage(
     }
 
     override fun take(): DeliveryNote = storage.toList().first().second
+}
+
+class InMemoryCustomerBasketStorage(
+    private val storage: MutableMap<CustomerId, CustomerBasket> = mutableMapOf()
+): CustomerBasketStorage {
+
+    override fun retrieve(customerId: CustomerId): CustomerBasket? = storage[customerId]
+
+    override fun save(customerBasket: CustomerBasket) {
+        storage += customerBasket.customerId to customerBasket
+    }
+
 }
 
 val cathyTheChef = UserDetails(

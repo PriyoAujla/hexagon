@@ -1,10 +1,10 @@
 package com.priyoaujla.domain.components.kitchen
 
 import com.priyoaujla.domain.components.delivery.DeliveryNote
-import com.priyoaujla.domain.components.order.OrderFinder
-import com.priyoaujla.domain.components.order.OrderId
-import com.priyoaujla.domain.components.order.PaymentStatus
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
+import com.priyoaujla.domain.components.ordering.OrderFinder
+import com.priyoaujla.domain.components.ordering.OrderId
+import com.priyoaujla.domain.components.ordering.PaymentStatus
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import com.priyoaujla.transaction.Transactor
 import java.time.Clock
 

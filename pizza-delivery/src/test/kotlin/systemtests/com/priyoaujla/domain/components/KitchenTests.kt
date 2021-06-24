@@ -1,12 +1,12 @@
 package systemtests.com.priyoaujla.domain.components
 
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import org.junit.jupiter.api.Test
 import systemtests.com.priyoaujla.TheSystem
 import systemtests.com.priyoaujla.TwoSeparatePaidOrdersScenario
 import systemtests.com.priyoaujla.runTest
 
-class KitchenTest {
+class KitchenTests {
 
     private val theSystem = TheSystem()
     private val chef = theSystem.newChef()

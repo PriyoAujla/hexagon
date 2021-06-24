@@ -1,7 +1,7 @@
 package com.priyoaujla.domain.components.delivery
 
-import com.priyoaujla.domain.components.order.OrderId
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
+import com.priyoaujla.domain.components.ordering.OrderId
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import com.priyoaujla.transaction.Transactor
 
 class Delivery(

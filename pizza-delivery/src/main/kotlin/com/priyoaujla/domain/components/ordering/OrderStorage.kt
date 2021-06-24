@@ -1,4 +1,4 @@
-package com.priyoaujla.domain.components.order
+package com.priyoaujla.domain.components.ordering
 
 interface OrderStorage: OrderFinder {
     fun upsert(order: Order)

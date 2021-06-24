@@ -1,6 +1,6 @@
-package com.priyoaujla.domain.components.order.orderstatus
+package com.priyoaujla.domain.components.ordering.orderstatus
 
-import com.priyoaujla.domain.components.order.OrderId
+import com.priyoaujla.domain.components.ordering.OrderId
 
 class OrderProgress(private val orderStatusStorage: OrderStatusStorage) {
 

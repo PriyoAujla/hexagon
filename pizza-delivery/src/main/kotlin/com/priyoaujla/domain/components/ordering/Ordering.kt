@@ -1,13 +1,13 @@
-package com.priyoaujla.domain.components.order
+package com.priyoaujla.domain.components.ordering
 
 import com.priyoaujla.domain.components.kitchen.Ticket
 import com.priyoaujla.domain.components.menu.Menu
-import com.priyoaujla.domain.components.order.Money.Companion.ZERO
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatusStorage
-import com.priyoaujla.domain.components.order.payment.PaymentId
-import com.priyoaujla.domain.components.order.payment.PaymentInstructions
-import com.priyoaujla.domain.components.order.payment.PaymentType
+import com.priyoaujla.domain.components.ordering.Money.Companion.ZERO
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatusStorage
+import com.priyoaujla.domain.components.ordering.payment.PaymentId
+import com.priyoaujla.domain.components.ordering.payment.PaymentInstructions
+import com.priyoaujla.domain.components.ordering.payment.PaymentType
 import com.priyoaujla.transaction.Transactor
 
 class Ordering(

@@ -1,4 +1,4 @@
-package com.priyoaujla.domain.components.order
+package com.priyoaujla.domain.components.ordering
 
 data class Money(val value: Double) {
     operator fun plus(increment: Money): Money {

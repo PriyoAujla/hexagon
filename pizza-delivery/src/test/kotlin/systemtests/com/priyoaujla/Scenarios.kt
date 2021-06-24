@@ -1,9 +1,9 @@
 package systemtests.com.priyoaujla
 
 import com.priyoaujla.domain.components.menu.Menu
-import com.priyoaujla.domain.components.order.Money
-import com.priyoaujla.domain.components.order.Order
-import com.priyoaujla.domain.components.order.payment.PaymentType
+import com.priyoaujla.domain.components.ordering.Money
+import com.priyoaujla.domain.components.ordering.Order
+import com.priyoaujla.domain.components.ordering.payment.PaymentType
 
 class TwoSeparatePaidOrdersScenario(theSystem: TheSystem) {
     private val pair = PaypalPaidScenario(theSystem) to PaypalPaidScenario(

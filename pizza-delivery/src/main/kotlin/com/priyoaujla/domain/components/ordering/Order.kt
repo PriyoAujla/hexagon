@@ -1,7 +1,7 @@
-package com.priyoaujla.domain.components.order
+package com.priyoaujla.domain.components.ordering
 
 import com.priyoaujla.domain.components.menu.Menu
-import com.priyoaujla.domain.components.order.payment.PaymentId
+import com.priyoaujla.domain.components.ordering.payment.PaymentId
 import java.util.*
 
 data class Order(

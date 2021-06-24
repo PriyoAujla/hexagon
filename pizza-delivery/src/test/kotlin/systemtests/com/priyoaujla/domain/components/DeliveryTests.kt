@@ -1,13 +1,13 @@
 package systemtests.com.priyoaujla.domain.components
 
-import com.priyoaujla.domain.components.order.orderstatus.OrderStatus
+import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import org.junit.jupiter.api.Test
 import systemtests.com.priyoaujla.CashOnDeliveryScenario
 import systemtests.com.priyoaujla.OrderFinishedCookingScenario
 import systemtests.com.priyoaujla.TheSystem
 import systemtests.com.priyoaujla.runTest
 
-class DeliveryTest {
+class DeliveryTests {
 
     private val theSystem = TheSystem()
 
