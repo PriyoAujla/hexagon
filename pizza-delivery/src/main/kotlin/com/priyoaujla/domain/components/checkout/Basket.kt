@@ -4,7 +4,6 @@ import com.priyoaujla.domain.components.menu.Menu
 import com.priyoaujla.domain.components.ordering.Money
 import com.priyoaujla.domain.components.ordering.Ordering
 import com.priyoaujla.domain.components.ordering.PaymentConfirmationType.Cash
-import com.priyoaujla.domain.components.ordering.PaymentStatus
 import com.priyoaujla.domain.components.ordering.payment.PaymentInstructions
 import com.priyoaujla.domain.components.ordering.payment.PaymentType
 import com.priyoaujla.transaction.Transactor
@@ -57,7 +56,7 @@ interface NotifyOnCheckout: (CheckoutCustomerBasket) -> Unit {
                     checkoutCustomerBasket.transactionId,
                     checkoutCustomerBasket.basket.items,
                     checkoutCustomerBasket.basket.total(),
-                    PaymentStatus.PaymentRequired
+                    checkoutCustomerBasket.paymentType
                 )
                 if (checkoutCustomerBasket.paymentType == PaymentType.Cash) {
                     ordering.paymentConfirmed(checkoutCustomerBasket.transactionId, Cash)

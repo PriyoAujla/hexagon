@@ -8,43 +8,6 @@ import systemtests.com.priyoaujla.CustomerRole.OrderDetails
 import systemtests.com.priyoaujla.CustomerRole.OrderDetails.PaymentStatus.Paid
 import systemtests.com.priyoaujla.CustomerRole.OrderDetails.PaymentStatus.PaymentRequired
 
-class TwoSeparatePaidOrdersScenario(theSystem: TheSystem) {
-    private val pair = PaypalPaidScenario(theSystem) to PaypalPaidScenario(
-        theSystem,
-        TestData.minimalMenu.items.take(1)
-    )
-
-    val firstCustomer = pair.first.customer
-    val firstCustomerItemsOrdered = pair.first.basketItems
-    val firstCustomerOrderId = pair.first.customer.canSeeOrderWithDetails(OrderDetails(firstCustomerItemsOrdered, Money(17.96), Paid))
-
-    val secondCustomer = pair.second.customer
-    val secondCustomerItemsOrdered = pair.second.basketItems
-    val secondCustomerOrderId = pair.second.customer.canSeeOrderWithDetails(OrderDetails(secondCustomerItemsOrdered, Money(3.99), Paid))
-}
-
-abstract class OrderScenario {
-    abstract val customer: CustomerRole
-
-    protected fun createOrder(withItems: List<Menu.MenuItem>, withPaymentMethod: PaymentType) {
-        customer.canAddToBasket(withItems)
-        customer.canPayForBasket(withPaymentMethod)
-    }
-}
-
-class PaypalPaidScenario(
-    theSystem: TheSystem,
-    val basketItems: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
-) : OrderScenario() {
-
-    override val customer = theSystem.newCustomer()
-
-    init {
-        createOrder(basketItems, PaymentType.Paypal)
-    }
-
-}
-
 object Scenarios {
 
     fun cashOnDeliveryCookedOrder(

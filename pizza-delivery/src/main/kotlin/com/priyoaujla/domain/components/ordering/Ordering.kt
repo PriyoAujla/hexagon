@@ -6,14 +6,26 @@ import com.priyoaujla.domain.components.menu.Menu
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatusStorage
 import com.priyoaujla.domain.components.ordering.payment.PaymentId
+import com.priyoaujla.domain.components.ordering.payment.PaymentType
 import com.priyoaujla.transaction.Transactor
 
 class Ordering(
     private val transactor: Transactor<Triple<OrderStorage, OrderStatusStorage, NotifyOrderComplete>>
 ) {
 
-    fun create(transactionId: TransactionId, items: List<Menu.MenuItem>, total: Money, paymentStatus: PaymentStatus): Order {
-        val order = Order(transactionId = transactionId, total = total, items = items, paymentStatus = paymentStatus)
+    fun create(
+        transactionId: TransactionId,
+        items: List<Menu.MenuItem>,
+        total: Money,
+        paymentType: PaymentType
+    ): Order {
+        val order = Order(
+            transactionId = transactionId,
+            total = total,
+            items = items,
+            paymentType = paymentType,
+            paymentStatus = PaymentStatus.PaymentRequired
+        )
         transactor.perform { (orderStorage, orderStatusStorage) ->
             orderStorage.upsert(order)
             orderStatusStorage.upsert(
