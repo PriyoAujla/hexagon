@@ -1,15 +1,13 @@
 package systemtests.com.priyoaujla
 
-import com.priyoaujla.domain.components.checkout.Basket
-import com.priyoaujla.domain.components.checkout.CustomerBasket
-import com.priyoaujla.domain.components.checkout.CustomerBasketStorage
-import com.priyoaujla.domain.components.checkout.CustomerId
+import com.priyoaujla.domain.components.checkout.*
 import com.priyoaujla.domain.components.delivery.*
 import com.priyoaujla.domain.components.kitchen.*
 import com.priyoaujla.domain.components.menu.Menu
 import com.priyoaujla.domain.components.menu.MenuStorage
 import com.priyoaujla.domain.components.menu.TheMenu
 import com.priyoaujla.domain.components.ordering.*
+import com.priyoaujla.domain.components.ordering.PaymentConfirmationType.Paid
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderProgress
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatusStorage
@@ -83,7 +81,7 @@ class TheSystem {
             ordering = ordering,
             paypal = paypal,
             orderStatusStorage = orderStatusStorage,
-            basket = Basket(InMemoryTransactor { customerBasketStorage })
+            basket = Basket(InMemoryTransactor { Pair(customerBasketStorage, NotifyOnCheckout.instance(ordering = ordering)) })
         )
 
     fun newChef(): ChefRole =
@@ -97,11 +95,10 @@ class CourierRole(
     private val delivery: Delivery
 ) {
 
-    fun theNextDeliveryIs(order: Order): DeliveryNote {
+    fun theNextDeliveryIs(deliveryDetails: DeliveryDetails): DeliveryNote {
         val nextOrderToDeliver = delivery.nextDelivery()
-        assertEquals(nextOrderToDeliver.orderId, order.id)
-        assertEquals(nextOrderToDeliver.menuItem, order.items)
-        assertEquals(nextOrderToDeliver.total, order.total)
+        assertEquals(nextOrderToDeliver.menuItem, deliveryDetails.items)
+        assertEquals(nextOrderToDeliver.total, deliveryDetails.total)
         return nextOrderToDeliver
     }
 
@@ -112,17 +109,18 @@ class CourierRole(
     fun canMarkDeliveryAsPaid(deliveryId: DeliveryId) {
         delivery.acceptedPaymentFor(deliveryId)
     }
+
+    data class DeliveryDetails(val items: List<Menu.MenuItem>, val total: Money)
 }
 
 class ChefRole(
     private val kitchen: Kitchen
 ) {
 
-    fun canPickupNextTicket(forOrder: Order): Ticket {
+    fun canPickupNextTicket(expectedTicketDetails: TicketDetails): Ticket {
         val nextTicket = kitchen.nextTicket()
         assertNotNull(nextTicket)
-        assertEquals(nextTicket.orderId, forOrder.id)
-        assertEquals(nextTicket.items, forOrder.items.map { it.item })
+        assertEquals(nextTicket.items, expectedTicketDetails.items.map { it.item })
         return nextTicket
     }
 
@@ -130,6 +128,8 @@ class ChefRole(
         kitchen.ticketComplete(ticket)
         assertFalse(kitchen.tickets().toList().contains(ticket))
     }
+
+    data class TicketDetails(val items: List<Menu.MenuItem>)
 }
 
 class CustomerRole(
@@ -146,32 +146,18 @@ class CustomerRole(
         assertEquals(menu.items, menuItems)
     }
 
-    fun canOrder(items: List<Menu.MenuItem>, expectedTotal: Money): Order {
-        val order = ordering.order(items)
-        assertEquals(order.total, expectedTotal)
-        return order
-    }
-
-    fun canPayForOrder(order: Order, paymentType: PaymentType): PaymentId? {
-        return when(val paymentInstructions = ordering.payment(paymentType, order)) {
-            is PaymentInstructions.RedirectToPaypal -> {
-                val paymentId = paypal.pay(paymentInstructions.order.id, paymentInstructions.order.total)
-                ordering.paymentConfirmed(paymentInstructions.order.id, paymentId)
-                paymentId
-            }
-            is PaymentInstructions.NoInstructions -> null
+    fun canSeeOrderWithDetails(expectedOrderDetails: OrderDetails): OrderId {
+        val orders = ordering.list()
+        val result = orders.find {
+            it.items == expectedOrderDetails.items &&
+            it.total == expectedOrderDetails.total &&
+            when(it.paymentStatus) {
+                is PaymentStatus.PaymentRequired -> OrderDetails.PaymentStatus.PaymentRequired
+                is PaymentStatus.Paid -> OrderDetails.PaymentStatus.Paid
+            } == expectedOrderDetails.paymentStatus
         }
-    }
-
-    fun canSeeOrderWithDetails(orderId: OrderId, expectedOrderDetails: OrderDetails) {
-        val order = ordering.retrieve(orderId)
-        assertEquals(expectedOrderDetails.items, order?.items)
-        assertEquals(expectedOrderDetails.total, order?.total)
-        assertEquals(expectedOrderDetails.paymentStatus, order?.paymentStatus)
-    }
-
-    fun canSeeOrderWithDetails(expectedOrderDetails: OrderDetails) {
-        TODO("Not yet implemented")
+        assertNotNull(result)
+        return result!!.id
     }
 
     fun canSeeOrderStatus(orderId: OrderId, status: OrderStatus.Status) {
@@ -188,15 +174,33 @@ class CustomerRole(
         assertEquals(items, customerBasket?.items)
     }
 
-    fun canPayForBasket(paypal: PaymentType): PaymentId? {
-        TODO("Not yet implemented")
+    fun canPayForBasket(paymentType: PaymentType): PaymentId? {
+        val customerBasket = basket.fetch(customerId)!!
+        val instructions = basket.payment(customerId, paymentType)
+        assertEquals(instructions.checkoutCustomerBasket?.basket?.customerId, customerId)
+        assertEquals(instructions.checkoutCustomerBasket?.basket?.items, customerBasket.items)
+        assertEquals(instructions.checkoutCustomerBasket?.basket?.total(), customerBasket.total())
+        return when(instructions) {
+            is PaymentInstructions.RedirectToPaypal -> {
+                val transactionId = instructions.checkoutCustomerBasket!!.transactionId
+                val paymentId = paypal.pay(transactionId, instructions.checkoutCustomerBasket!!.basket.total())
+                ordering.paymentConfirmed(transactionId, Paid(paymentId))
+                paymentId
+            }
+            is PaymentInstructions.NoInstructions -> null
+        }
     }
 
     data class OrderDetails(
         val items: List<Menu.MenuItem> = emptyList(),
         val total: Money,
         val paymentStatus: PaymentStatus = PaymentStatus.PaymentRequired
-    )
+    ) {
+        enum class PaymentStatus {
+            PaymentRequired, Paid
+        }
+    }
+
 }
 
 object TestData {
@@ -244,7 +248,7 @@ object TestData {
 
 class FakePaypal : Paypal {
 
-    override fun pay(orderId: OrderId, total: Money): PaymentId {
+    override fun pay(transactionId: TransactionId, total: Money): PaymentId {
         return PaymentId(UUID.randomUUID().toString())
     }
 }
@@ -294,6 +298,9 @@ data class InMemoryOrderStorage(
     }
 
     override fun get(orderId: OrderId): Order? = storage.find { it.id == orderId }
+
+    override fun findBy(transactionId: TransactionId): Order? = storage.find { it.transactionId == transactionId }
+    override fun all(): Set<Order> = storage
 
 }
 

@@ -49,11 +49,11 @@ class CreateDelivery(private val orderFinder: OrderFinder, private val sendToDel
         sendToDelivery(DeliveryNote(
             orderId = ticket.orderId,
             menuItem = order.items,
-            total = order.total,
             paymentStatus = when(order.paymentStatus) {
                 is PaymentStatus.PaymentRequired -> DeliveryNote.PaymentStatus.PaymentRequired
                 is PaymentStatus.Paid -> DeliveryNote.PaymentStatus.Paid
-            }
+            },
+            total = order.total
         ))
     }
 }

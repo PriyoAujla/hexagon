@@ -1,23 +1,19 @@
 package com.priyoaujla.domain.components.ordering
 
+import com.priyoaujla.domain.components.checkout.TransactionId
 import com.priyoaujla.domain.components.kitchen.Ticket
 import com.priyoaujla.domain.components.menu.Menu
-import com.priyoaujla.domain.components.ordering.Money.Companion.ZERO
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatus
 import com.priyoaujla.domain.components.ordering.orderstatus.OrderStatusStorage
 import com.priyoaujla.domain.components.ordering.payment.PaymentId
-import com.priyoaujla.domain.components.ordering.payment.PaymentInstructions
-import com.priyoaujla.domain.components.ordering.payment.PaymentType
 import com.priyoaujla.transaction.Transactor
 
 class Ordering(
     private val transactor: Transactor<Triple<OrderStorage, OrderStatusStorage, NotifyOrderComplete>>
 ) {
 
-    fun order(items: List<Menu.MenuItem>): Order {
-        val order = items.fold(Order(total = ZERO)) { order, menuItem ->
-            order.addItem(menuItem)
-        }
+    fun create(transactionId: TransactionId, items: List<Menu.MenuItem>, total: Money, paymentStatus: PaymentStatus): Order {
+        val order = Order(transactionId = transactionId, total = total, items = items, paymentStatus = paymentStatus)
         transactor.perform { (orderStorage, orderStatusStorage) ->
             orderStorage.upsert(order)
             orderStatusStorage.upsert(
@@ -37,28 +33,28 @@ class Ordering(
         }
     }
 
-    fun payment(paymentType: PaymentType, order: Order): PaymentInstructions {
-        return when (paymentType) {
-            PaymentType.Paypal -> PaymentInstructions.RedirectToPaypal(order)
-            PaymentType.Cash -> {
-                transactor.perform { (_, _, notifyOrderComplete) ->
-                    notifyOrderComplete(order)
-                    PaymentInstructions.NoInstructions(order)
-                }
-            }
-        }
-    }
-
-    fun paymentConfirmed(orderId: OrderId, paymentId: PaymentId) {
-        transactor.perform { (orderStorage, _, startBaking) ->
-            val order = orderStorage.get(orderId)
+    fun paymentConfirmed(transactionId: TransactionId, paymentConfirmationType: PaymentConfirmationType) {
+        transactor.perform { (orderStorage, _, notifyOrderComplete) ->
+            val order = orderStorage.findBy(transactionId)
             order?.let {
-                orderStorage.upsert(it.paid(paymentId))
-                startBaking(order)
+                when(paymentConfirmationType) {
+                    is PaymentConfirmationType.Paid -> orderStorage.upsert(it.paid(paymentConfirmationType.paymentId))
+                    is PaymentConfirmationType.Cash -> Unit
+                }
+                notifyOrderComplete(order)
             } ?: error("")
         }
     }
 
+    fun list(): Set<Order> = transactor.perform { (orderStorage) ->
+        orderStorage.all()
+    }
+
+}
+
+sealed class PaymentConfirmationType {
+    data class Paid(val paymentId: PaymentId): PaymentConfirmationType()
+    object Cash: PaymentConfirmationType()
 }
 
 typealias NotifyOrderComplete = (Order) -> Unit

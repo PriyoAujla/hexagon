@@ -1,10 +1,11 @@
 package systemtests.com.priyoaujla.domain.components
 
 import com.priyoaujla.domain.components.ordering.Money
-import com.priyoaujla.domain.components.ordering.PaymentStatus
 import com.priyoaujla.domain.components.ordering.payment.PaymentType
 import org.junit.jupiter.api.Test
 import systemtests.com.priyoaujla.CustomerRole.OrderDetails
+import systemtests.com.priyoaujla.CustomerRole.OrderDetails.PaymentStatus.Paid
+import systemtests.com.priyoaujla.CustomerRole.OrderDetails.PaymentStatus.PaymentRequired
 import systemtests.com.priyoaujla.TestData
 import systemtests.com.priyoaujla.TheSystem
 
@@ -28,12 +29,12 @@ class CheckoutTests {
             customer.canAddToBasket(this)
         }
 
-        val paymentId = customer.canPayForBasket(PaymentType.Paypal)
+        customer.canPayForBasket(PaymentType.Paypal)
 
         customer.canSeeOrderWithDetails(OrderDetails(
             items = items,
             total = Money(17.96),
-            paymentStatus = PaymentStatus.Paid(paymentId = paymentId!!)
+            paymentStatus = Paid
         ))
     }
 
@@ -48,7 +49,7 @@ class CheckoutTests {
         customer.canSeeOrderWithDetails(OrderDetails(
             items = items,
             total = Money(17.96),
-            paymentStatus = PaymentStatus.PaymentRequired
+            paymentStatus = PaymentRequired
         ))
     }
 }

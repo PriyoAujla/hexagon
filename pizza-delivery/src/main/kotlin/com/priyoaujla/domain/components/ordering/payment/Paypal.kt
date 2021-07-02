@@ -1,8 +1,8 @@
 package com.priyoaujla.domain.components.ordering.payment
 
+import com.priyoaujla.domain.components.checkout.TransactionId
 import com.priyoaujla.domain.components.ordering.Money
-import com.priyoaujla.domain.components.ordering.OrderId
 
 interface Paypal {
-    fun pay(orderId: OrderId, total: Money): PaymentId
+    fun pay(transactionId: TransactionId, total: Money): PaymentId
 }
