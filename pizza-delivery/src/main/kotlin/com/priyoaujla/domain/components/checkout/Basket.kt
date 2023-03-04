@@ -46,11 +46,13 @@ class Basket(private val customerBasketStorageTransactor: Transactor<Pair<Custom
 interface CustomerBasketStorage {
     fun retrieve(customerId: CustomerId): CustomerBasket?
     fun save(customerBasket: CustomerBasket)
+
+    fun clear(customerId: CustomerId)
 }
 
 interface NotifyOnCheckout: (CheckoutCustomerBasket) -> Unit {
     companion object {
-        fun instance(ordering: Ordering) = object : NotifyOnCheckout {
+        fun instance(ordering: Ordering, customerBasketStorage: CustomerBasketStorage) = object : NotifyOnCheckout {
             override fun invoke(checkoutCustomerBasket: CheckoutCustomerBasket) {
                 ordering.create(
                     checkoutCustomerBasket.transactionId,
@@ -61,6 +63,7 @@ interface NotifyOnCheckout: (CheckoutCustomerBasket) -> Unit {
                 if (checkoutCustomerBasket.paymentType == PaymentType.Cash) {
                     ordering.paymentConfirmed(checkoutCustomerBasket.transactionId, Cash)
                 }
+                customerBasketStorage.clear(checkoutCustomerBasket.basket.customerId)
             }
         }
     }

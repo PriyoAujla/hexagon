@@ -16,7 +16,7 @@ object Scenarios {
         chef: ChefRole? = null,
         basketItems: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
     ) {
-        cookedOrder(customer, theSystem, chef, basketItems, PaymentType.Cash)
+        cookedOrder(theSystem, customer, chef, basketItems, PaymentType.Cash)
     }
 
     fun paypalCookedOrder(
@@ -25,12 +25,12 @@ object Scenarios {
         chef: ChefRole? = null,
         basketItems: List<Menu.MenuItem> = TestData.minimalMenu.items.toList() + TestData.minimalMenu.items
     ) {
-        cookedOrder(customer, theSystem, chef, basketItems, PaymentType.Paypal)
+        cookedOrder(theSystem, customer, chef, basketItems, PaymentType.Paypal)
     }
 
     private fun cookedOrder(
-        customer: CustomerRole?,
         theSystem: TheSystem,
+        customer: CustomerRole?,
         chef: ChefRole?,
         basketItems: List<Menu.MenuItem>,
         paymentType: PaymentType

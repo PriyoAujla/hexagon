@@ -16,10 +16,6 @@ import com.priyoaujla.domain.components.ordering.payment.PaymentInstructions
 import com.priyoaujla.domain.components.ordering.payment.PaymentType
 import com.priyoaujla.domain.components.ordering.payment.Paypal
 import org.junit.jupiter.api.Assertions.*
-import systemtests.com.priyoaujla.TestData.Ingredients.basil
-import systemtests.com.priyoaujla.TestData.Ingredients.mozzarella
-import systemtests.com.priyoaujla.TestData.Ingredients.pizzaDough
-import systemtests.com.priyoaujla.TestData.Ingredients.tomatoSauce
 import systemtests.com.priyoaujla.transaction.InMemoryTransactor
 import java.util.*
 
@@ -81,7 +77,10 @@ class TheSystem {
             ordering = ordering,
             paypal = paypal,
             orderStatusStorage = orderStatusStorage,
-            basket = Basket(InMemoryTransactor { Pair(customerBasketStorage, NotifyOnCheckout.instance(ordering = ordering)) })
+            basket = Basket(InMemoryTransactor { Pair(customerBasketStorage, NotifyOnCheckout.instance(
+                ordering = ordering,
+                customerBasketStorage = customerBasketStorage
+            )) })
         )
 
     fun newChef(): ChefRole =
@@ -191,6 +190,13 @@ class CustomerRole(
         }
     }
 
+    fun canSeeOrders(vararg orderIds: OrderId) {
+        val actualOrderIds = ordering.list()
+            .map { it.id }
+
+        assertEquals(orderIds.toList(), actualOrderIds)
+    }
+
     data class OrderDetails(
         val items: List<Menu.MenuItem> = emptyList(),
         val total: Money,
@@ -201,49 +207,6 @@ class CustomerRole(
         }
     }
 
-}
-
-object TestData {
-
-    object Ingredients {
-        val pizzaDough = Menu.Ingredient("Pizza Dough")
-        val tomatoSauce = Menu.Ingredient("Tomato Sauce")
-        val mozzarella = Menu.Ingredient("Mozzarella Cheese")
-        val basil = Menu.Ingredient("Basil")
-    }
-
-    object Pizzas {
-        val plainPizza =
-            Menu.Item(
-                Menu.Name("Plain Pizza"),
-                listOf(pizzaDough, tomatoSauce)
-            )
-        val margarita = plainPizza
-            .withName("Margarita Pizza")
-            .addIngredient(mozzarella)
-            .addIngredient(basil)
-    }
-
-    private fun Menu.Item.withName(name: String): Menu.Item {
-        return copy(name = Menu.Name(name))
-    }
-
-    private fun Menu.Item.addIngredient(ingredient: Menu.Ingredient): Menu.Item {
-        return copy(ingredients = ingredients + ingredient)
-    }
-
-    val minimalMenu = Menu(
-        items = setOf(
-            Menu.MenuItem(
-                Pizzas.plainPizza,
-                Money(3.99)
-            ),
-            Menu.MenuItem(
-                Pizzas.margarita,
-                Money(4.99)
-            )
-        )
-    )
 }
 
 class FakePaypal : Paypal {
@@ -342,6 +305,10 @@ class InMemoryCustomerBasketStorage(
 
     override fun save(customerBasket: CustomerBasket) {
         storage += customerBasket.customerId to customerBasket
+    }
+
+    override fun clear(customerId: CustomerId) {
+        storage.remove(customerId)
     }
 
 }
